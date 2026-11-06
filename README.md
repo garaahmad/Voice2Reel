@@ -2,7 +2,22 @@
 
 Turn a written idea into a short video narrated in your own cloned voice.
 
-**Status: pre-implementation.** This README describes the intended product and proposed architecture. The renderer, backend, AI integrations, and user interface are not implemented in this repository yet.
+**Status: training toolkit implemented; product pipeline still in development.** The repository now includes Colab notebooks, training/inference code for script generation and Arabic voice cloning, starter data, and tests. GPU training and voice quality have not been measured here. The renderer, backend, and user interface remain planned.
+
+## Train and experiment on Colab
+
+Start with the **[Arabic Colab guide](docs/COLAB_AR.md)**.
+
+| Component | Notebook | Approach |
+|---|---|---|
+| Written idea → Arabic script and visual beats | [Scriptwriter QLoRA](notebooks/01_scriptwriter_qlora.ipynb) | Qwen2.5-1.5B-Instruct, NF4 + LoRA |
+| Script + reference voice → narration | [Arabic voice XTTS](notebooks/02_arabic_voice_xtts.ipynb) | XTTS-v2 baseline inference and GPT fine-tuning |
+
+The notebooks target separate free-Colab T4 sessions, save checkpoints to Drive, and support private-repository ZIP uploads. Base weights download automatically at pinned revisions; no newly trained weights are shipped. Voice training requires real recordings matching transcripts. The included 40 script examples and 120 recording prompts are a starter kit, not a production dataset.
+
+See [dataset provenance](datasets/README.md), [research and model licenses](docs/RESEARCH.md), [evaluation](docs/EVALUATION.md), and [verified checks and remaining limits](docs/VALIDATION.md). XTTS weights and outputs are subject to the non-commercial CPML license.
+
+The sections below describe the full product; planned API/rendering components are not provided by the training toolkit.
 
 ## The idea
 
@@ -50,7 +65,7 @@ Script + timestamps ──▶ AI Director ──▶ Scene-plan JSON
                                        Downloadable MP4
 ```
 
-The server orchestrates the entire process. Scriptwriting and voice generation may use external APIs or locally hosted models; providers have not been selected.
+The planned server orchestrates the entire process. The current experiment uses local Qwen and XTTS models; production model/provider selection remains open.
 
 ## Responsibilities
 
@@ -125,7 +140,7 @@ Planned validation rules:
 | Arabic text | Centralized shaping and bidirectional text handling |
 | Scriptwriting | Provider-agnostic LLM interface |
 | Scene planning | Provider-agnostic Director with structured JSON output and bounded retries |
-| Voice cloning | Dedicated provider/model interface; selection pending |
+| Voice cloning | XTTS-v2 experimental toolkit; production provider selection pending |
 | Alignment | Provider timestamps or a separate alignment tool |
 | Storage | Local disk behind a Storage interface; object storage later if needed |
 | Packaging | Docker image with pinned dependencies, ffmpeg, and fonts |
@@ -237,9 +252,9 @@ Previously documented legacy issues to check when those scripts are imported:
 | Legacy scripts | Previously documented as outside this repository |
 | Schema | Previously described as an untested draft; implementation not established here |
 | Rig and engine | Not implemented in this repository |
-| Scriptwriter | Not started |
-| Voice cloning and narration | Not started; provider/model undecided |
-| Alignment and Director | Not started |
+| Scriptwriter | QLoRA training, validated generation, and Colab notebook implemented; GPU evaluation pending |
+| Voice cloning and narration | XTTS-v2 training/inference toolkit implemented; real recordings and GPU evaluation required |
+| Alignment and Director | Structured visual beats and per-segment synthesis timing implemented; word alignment and renderer scene plan remain planned |
 | Backend and worker | Not started |
 | User interface | Not started |
 
@@ -272,3 +287,4 @@ Planned implementation order:
 ## Short description
 
 Voice2Reel turns a written idea into a short video narrated in your own voice. AI writes the script, a voice-cloning model generates narration from your uploaded voice sample, and the server creates the visuals, synchronizes them with the speech, and exports the finished video.
+
