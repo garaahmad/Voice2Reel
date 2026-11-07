@@ -1,8 +1,8 @@
 # Voice2Reel
 
-Turn a written idea into a short video narrated in your own cloned voice.
+Turn a written idea into a short video with a ready-made Arabic or English AI voice, or optionally your own cloned voice.
 
-**Status: training toolkit implemented; product pipeline still in development.** The repository now includes Colab notebooks, training/inference code for script generation and Arabic voice cloning, starter data, and tests. GPU training and voice quality have not been measured here. The renderer, backend, and user interface remain planned.
+**Status: training toolkit implemented; product pipeline still in development.** The repository now includes Colab notebooks, training/inference code for script generation, preset Arabic/English speech, and optional voice cloning, starter data, and tests. GPU training and voice quality have not been measured here. A first fixed-style stickman renderer is implemented; the backend and user interface remain planned.
 
 ## Train and experiment on Colab
 
@@ -10,33 +10,31 @@ Start with the **[Arabic Colab guide](docs/COLAB_AR.md)**.
 
 | Component | Notebook | Approach |
 |---|---|---|
-| Written idea → Arabic script and visual beats | [Scriptwriter QLoRA](notebooks/01_scriptwriter_qlora.ipynb) | Qwen2.5-1.5B-Instruct, NF4 + LoRA |
+| Text → ready-made Arabic/English AI voice | [Ready voice — start here](notebooks/00_ready_voice_ar_en.ipynb) | XTTS-v2 preset speakers; no recording or training |
+| Written idea → script and visual beats | [Scriptwriter QLoRA](notebooks/01_scriptwriter_qlora.ipynb) | Qwen2.5-1.5B-Instruct, NF4 + LoRA |
 | Script + reference voice → narration | [Arabic voice XTTS](notebooks/02_arabic_voice_xtts.ipynb) | XTTS-v2 baseline inference and GPT fine-tuning |
 
-The notebooks target separate free-Colab T4 sessions, save checkpoints to Drive, and support private-repository ZIP uploads. Base weights download automatically at pinned revisions; no newly trained weights are shipped. Voice training requires real recordings matching transcripts. The included 40 script examples and 120 recording prompts are a starter kit, not a production dataset.
+The notebooks target separate free-Colab T4 sessions, save checkpoints to Drive, and support private-repository ZIP uploads. Base weights download automatically at pinned revisions; no newly trained weights are shipped. Preset speech requires no recordings or training. Voice fine-tuning requires real recordings matching transcripts. The included 40 script examples and 120 recording prompts are a starter kit, not a production dataset.
 
 See [dataset provenance](datasets/README.md), [research and model licenses](docs/RESEARCH.md), [evaluation](docs/EVALUATION.md), and [verified checks and remaining limits](docs/VALIDATION.md). XTTS weights and outputs are subject to the non-commercial CPML license.
 
-The sections below describe the full product; planned API/rendering components are not provided by the training toolkit.
+See [the runnable video demo](docs/VIDEO_DEMO.md) for the first script → narration → stickman MP4 pipeline. The sections below describe the full product; the API and complete visual engine remain planned.
 
 ## The idea
 
-The user provides:
+The user provides a **written idea** and selects **Arabic or English**. The default narrator is a ready-made AI voice. An uploaded recording is optional, for users who choose voice cloning.
 
-1. A **written idea** describing the video they want.
-2. A **recording of their own voice** as a reference for voice cloning.
+An AI scriptwriter expands the idea into a narration script. The speech model reads the script with the selected preset or cloned voice. The server creates the visuals, synchronizes them with the generated narration, and exports the finished video.
 
-An AI scriptwriter expands the idea into a narration script. A voice-cloning model generates new speech that reads the script in the user's voice. The server creates the visuals, synchronizes them with the generated narration, and exports the finished video.
-
-The voice sample supplies the voice identity. Its words do not need to match the idea or the script, and its duration does not determine the final video duration.
+In optional cloning mode, the voice sample supplies the voice identity. Its words do not need to match the idea or the script, and its duration does not determine the final video duration.
 
 ## User flow
 
 1. Write an idea.
-2. Upload a voice sample.
+2. Select the language and a preset AI voice, or optionally upload a voice sample.
 3. Let AI generate the script.
 4. Review and edit the script.
-5. Start generation: synthesize the narration in the cloned voice, plan the scenes, and render the video on the server.
+5. Start generation: synthesize the narration in the selected voice, plan the scenes, and render the video on the server.
 6. Preview and download the final video.
 
 Example: a user writes “Explain why developers should write tests” and uploads a sample of their voice. AI writes a suitable script, the voice model reads that new script in the user's voice, and the server produces a video with matching scenes and captions.
@@ -46,7 +44,7 @@ Example: a user writes “Explain why developers should write tests” and uploa
 ```text
 Written idea ──▶ AI scriptwriter ──▶ Editable script
                                           │
-Uploaded voice sample ──▶ Voice cloning ◀──┘
+Preset voice / optional sample ──▶ TTS ◀───┘
                                 │
                         Generated narration
                                 │
@@ -71,9 +69,9 @@ The planned server orchestrates the entire process. The current experiment uses 
 
 | Component | Responsibility |
 |---|---|
-| Input | Accept the written idea and reference voice recording |
+| Input | Accept the written idea, language, and preset voice or optional reference recording |
 | Scriptwriter | Turn the written idea into an editable narration script |
-| Voice cloning / TTS | Read the approved script using the reference voice |
+| Voice cloning / TTS | Read the approved script using a preset AI voice or optional reference voice |
 | Alignment | Obtain segment or word timestamps from the generated narration |
 | Director | Convert the script and speech timing into a structured scene plan |
 | Validator | Check supported visual values, timeline continuity, and media references |
@@ -156,7 +154,7 @@ received
   -> scripting
   -> awaiting_review
   -> queued
-  -> cloning_voice
+  -> synthesizing_voice
   -> aligning
   -> planning
   -> validating
@@ -165,7 +163,7 @@ received
   -> done
 ```
 
-Jobs may also become failed or cancelled. The cloning stage covers reference-voice preparation and script synthesis; some providers combine these operations.
+Jobs may also become failed or cancelled. The voice stage synthesizes the script using the selected preset; reference-voice preparation is needed only for optional cloning.
 
 Review happens before voice generation and rendering. An explicit generate action starts the expensive stages.
 
@@ -177,7 +175,7 @@ These endpoints describe a proposed interface; they are not implemented.
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | /api/v1/jobs | Submit a written idea and voice sample as multipart data; return 202 with job ID |
+| POST | /api/v1/jobs | Submit a written idea, language and preset speaker, or an optional voice sample; return 202 with job ID |
 | GET | /api/v1/jobs/{id} | Read status, stage progress, timings, and errors |
 | GET | /api/v1/jobs/{id}/script | Retrieve the generated script |
 | PUT | /api/v1/jobs/{id}/script | Save an edited script and invalidate dependent outputs |
@@ -250,10 +248,10 @@ Previously documented legacy issues to check when those scripts are imported:
 |---|---|
 | Product specification | Updated for written ideas and cloned-voice narration |
 | Legacy scripts | Previously documented as outside this repository |
-| Schema | Previously described as an untested draft; implementation not established here |
-| Rig and engine | Not implemented in this repository |
+| Schema | Script/visual-beat models and narration-timeline checks implemented and tested |
+| Rig and engine | First fixed-style stickman renderer implemented; full visual engine and legacy parity remain planned |
 | Scriptwriter | QLoRA training, validated generation, and Colab notebook implemented; GPU evaluation pending |
-| Voice cloning and narration | XTTS-v2 training/inference toolkit implemented; real recordings and GPU evaluation required |
+| Voice cloning and narration | Preset Arabic/English speech and optional cloning implemented; real recordings required only for fine-tuning |
 | Alignment and Director | Structured visual beats and per-segment synthesis timing implemented; word alignment and renderer scene plan remain planned |
 | Backend and worker | Not started |
 | User interface | Not started |

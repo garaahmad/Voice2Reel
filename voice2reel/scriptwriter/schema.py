@@ -21,7 +21,7 @@ class Beat(StrictModel):
 class Script(StrictModel):
     schema_version: Literal[1]
     title: ShortText
-    language: Literal["ar"]
+    language: Literal["ar", "en"]
     target_duration_seconds: Annotated[int, Field(ge=10, le=60)]
     beats: Annotated[list[Beat], Field(min_length=3, max_length=8)]
 
@@ -37,11 +37,20 @@ class Script(StrictModel):
         return " ".join(beat.narration for beat in self.beats)
 
 
-def parse_script(raw, expected_duration=None):
+def parse_script(raw, expected_duration=None, expected_language=None):
+    raw = raw.strip()
+    # Small instruction models sometimes wrap valid JSON in Markdown despite the
+    # prompt. Remove only a whole-response code fence, then validate as usual.
+    if raw.startswith("```json\n") and raw.endswith("```"):
+        raw = raw[len("```json\n") : -3].strip()
+    elif raw.startswith("```\n") and raw.endswith("```"):
+        raw = raw[len("```\n") : -3].strip()
     value = json.loads(raw)
     script = Script.model_validate(value)
     if expected_duration is not None and script.target_duration_seconds != expected_duration:
         raise ValueError("Generated target duration differs from requested duration")
+    if expected_language is not None and script.language != expected_language:
+        raise ValueError("Generated language differs from requested language")
     return script
 
 
@@ -53,11 +62,26 @@ SYSTEM_PROMPT = """أنت كاتب فيديوهات قصيرة بالعربية.
 """ + json.dumps(Script.model_json_schema(), ensure_ascii=False, separators=(",", ":"))
 
 
-def messages_for(idea, duration=30):
+ENGLISH_PROMPT = """Write a clear, useful short video script in English with natural spoken sentences.
+Return only JSON matching the schema, without Markdown. Do not invent statistics, promises, or sources.
+Use three to eight narrative beats, each with narration and a short caption. Respect the requested duration.
+Choose only supported pose and camera values. Actual timings are added after speech synthesis.
+Set language to en. Schema:
+""" + json.dumps(Script.model_json_schema(), separators=(",", ":"))
+
+
+def messages_for(idea, duration=30, language="ar"):
     if not isinstance(idea, str) or not idea.strip() or len(idea) > 2000:
         raise ValueError("Idea must contain 1–2000 characters")
     if type(duration) is not int or not 10 <= duration <= 60:
         raise ValueError("Duration must be an integer from 10 to 60 seconds")
+    if language not in ("ar", "en"):
+        raise ValueError("Supported languages: ar, en")
+    if language == "en":
+        return [
+            {"role": "system", "content": ENGLISH_PROMPT},
+            {"role": "user", "content": f"Idea: {idea.strip()}\nTarget duration: {duration} seconds"},
+        ]
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
         {"role": "user", "content": f"الفكرة: {idea.strip()}\nالمدة المستهدفة: {duration} ثانية"},

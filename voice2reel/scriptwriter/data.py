@@ -21,7 +21,7 @@ def load_records(path):
             raise ValueError("Missing or duplicate record ID")
         seen.add(row["id"])
         script = Script.model_validate(row["script"])
-        messages_for(row["idea"], script.target_duration_seconds)
+        messages_for(row["idea"], script.target_duration_seconds, script.language)
     return rows
 
 
@@ -37,7 +37,7 @@ def validate_splits(train, validation):
 
 def encode_record(row, tokenizer, max_length):
     script = Script.model_validate(row["script"])
-    messages = messages_for(row["idea"], script.target_duration_seconds)
+    messages = messages_for(row["idea"], script.target_duration_seconds, script.language)
     prompt = tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
     complete = tokenizer.apply_chat_template(
         messages + [{"role": "assistant", "content": json.dumps(row["script"], ensure_ascii=False)}],

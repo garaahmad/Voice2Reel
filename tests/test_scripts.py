@@ -48,6 +48,8 @@ def test_json_and_requested_duration():
     with pytest.raises(ValueError):
         messages_for(" ")
     assert Script.model_validate(example()["script"]).narration()
+    raw = json.dumps(example()["script"])
+    assert parse_script("```json\n" + raw + "\n```").title == example()["script"]["title"]
 
 
 def test_leakage_rejected():

@@ -21,3 +21,7 @@ Pinned model revisions:
 Dependencies pin the core API stack. The CUDA stack is torch/torchaudio 2.8.0 from the cu126 wheel index. There is no FlashAttention build, DeepSpeed, runtime monkeypatch, or automatic acceptance of model-license prompts. Additional dependencies are recorded by the environment freeze command in each notebook.
 
 This project adapts existing pretrained models. It does not claim a novel foundation-model architecture, guaranteed factual correctness, perfect voice similarity, or benchmark superiority. Free Colab compatibility remains a target until the included GPU smoke runs pass on the user's allocated runtime.
+
+## Preset voice extension
+
+Reviewed the maintained [XTTS preset speaker API](https://coqui-tts.readthedocs.io/en/latest/models/xtts.html). The pinned speakers_xtts.pth asset provides 58 named conditioning presets; both Arabic and English are documented languages. Presets use stored conditioning tensors, so the user does not supply audio and no fine-tuning is required. The inference download excludes training-only DVAE/mel-stat assets. Actual Arabic and English CPU generation is recorded in VALIDATION.md.

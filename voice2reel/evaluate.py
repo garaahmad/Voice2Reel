@@ -62,7 +62,9 @@ def main():
         results = []
         for row in rows:
             try:
-                script, attempts = generator.generate(row["idea"], row["script"]["target_duration_seconds"])
+                script, attempts = generator.generate(
+                    row["idea"], row["script"]["target_duration_seconds"], language=row["script"]["language"]
+                )
                 results.append(
                     {"id": row["id"], "valid": True, "attempts": attempts, "output": script.model_dump()}
                 )
