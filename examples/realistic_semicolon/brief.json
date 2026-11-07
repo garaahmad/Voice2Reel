@@ -1,0 +1,9 @@
+{
+  "idea": "فيديو واقعي قصير عن أخطاء المبتدئين في استخدام السيميكولون في JavaScript",
+  "audience": "مبتدئون في البرمجة",
+  "target_duration_seconds": 15,
+  "language": "ar",
+  "setting": "A young adult programmer in a navy hoodie at a wooden desk, warm desk lamp, realistic quiet home office.",
+  "message": "في JavaScript وضع فاصلة منقوطة مباشرة بعد if ينهي عبارتها ويجعل الكتلة التالية مستقلة. بعض نهايات العبارات تقبل الإدراج التلقائي للفاصلة المنقوطة. الفاصلتان في رأس حلقة for التقليدية صحيحتان ومطلوبتان للفصل بين الأجزاء الثلاثة. لا تعمم أن كل فاصلة منقوطة داخل for خطأ. النص يشرح خطر الفاصلة بعد if ونصيحة مراجعة الشرط، بلا ادعاء أن الحاسوب يفهم النية.",
+  "reference_video": null
+}

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "voice2reel-training"
-version = "0.1.0"
-description = "Colab training tools for Arabic reel scripts and voice cloning"
+version = "0.2.0"
+description = "Colab tools for AI-directed videos, Arabic/English narration, and model adaptation"
 requires-python = ">=3.11,<3.14"
 dependencies = ["pydantic==2.11.7", "numpy==2.2.6", "soundfile==0.13.1", "scipy==1.15.3"]
 

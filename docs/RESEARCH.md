@@ -25,3 +25,11 @@ This project adapts existing pretrained models. It does not claim a novel founda
 ## Preset voice extension
 
 Reviewed the maintained [XTTS preset speaker API](https://coqui-tts.readthedocs.io/en/latest/models/xtts.html). The pinned speakers_xtts.pth asset provides 58 named conditioning presets; both Arabic and English are documented languages. Presets use stored conditioning tensors, so the user does not supply audio and no fine-tuning is required. The inference download excludes training-only DVAE/mel-stat assets. Actual Arabic and English CPU generation is recorded in VALIDATION.md.
+
+## Realistic video extension (2026-11-07)
+
+Selected [LTX-Video-0.9.5](https://huggingface.co/Lightricks/LTX-Video-0.9.5), revision `e58e28c39631af4d1468ee57a853764e11c1d37e`, with Diffusers 0.35.2. Its 2B video transformer offers text and image conditioning through [LTXConditionPipeline](https://huggingface.co/docs/diffusers/v0.35.2/en/api/pipelines/ltx_video). This is a resource-conscious baseline, not a claim that it is the newest or strongest video model. LTX 0.9.7's 13B variants are larger; newer distilled variants require their own checkpoint-specific sampling settings. The selected non-distilled checkpoint uses 40 steps and guidance 3.0, not a distilled 4-step schedule.
+
+The maintained official pipeline source was checked for image conditioning, precomputed prompt embeddings, argument order, and frame constraints. Actual offline CPU tests exercise both conditioning paths with tiny random LTX weights. The real video weights were not downloaded or run on the CPU-only host. T4 memory/speed and end-to-end visual quality are unmeasured.
+
+T5 is loaded with [Transformers bitsandbytes NF4](https://huggingface.co/docs/transformers/v4.57.3/en/quantization/bitsandbytes), encodes prompts, then exits memory before the video transformer loads. Reference video support means extracting one conditioning frame; no vision-language model analyzes the full video. See the model repository license and existing XTTS CPML restrictions before product use.

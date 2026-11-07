@@ -1,288 +1,81 @@
 # Voice2Reel
 
-Turn a written idea into a short video with a ready-made Arabic or English AI voice, or optionally your own cloned voice.
+Turn a **written idea** into a short video with **realistic AI-generated scenes** and Arabic or English AI narration. A reference video and a voice-cloning recording are optional, separate inputs.
 
-**Status: training toolkit implemented; product pipeline still in development.** The repository now includes Colab notebooks, training/inference code for script generation, preset Arabic/English speech, and optional voice cloning, starter data, and tests. GPU training and voice quality have not been measured here. A first fixed-style stickman renderer is implemented; the backend and user interface remain planned.
+**Status: experimental local/Colab toolkit.** The director, scriptwriter, speech, video-generation adapter, captioning, and assembly code are implemented. Actual Qwen and XTTS inference has run on CPU. Full realistic video generation with the LTX weights and free-Colab GPU execution have **not** been verified. No custom-trained model weights are shipped; the web application and server job queue remain future work.
 
-## Train and experiment on Colab
+## The workflow
 
-Start with the **[Arabic Colab guide](docs/COLAB_AR.md)**.
+1. Enter a written idea; optionally provide a reference video.
+2. Answer at most **five questions**: audience, duration, narration language, setting/characters, and the key message or facts.
+3. Qwen acts as a director: it writes a continuity description, shot prompts, camera/action descriptions, and beginning/end actions.
+4. A second Qwen pass writes narration following those shots. Review or edit the script.
+5. XTTS generates a ready-made AI voice in Arabic or English; optional voice cloning remains available.
+6. Actual speech timing determines each clip's frame range. LTX generates the visuals; the tools add captions and mux the narration into MP4.
 
-| Component | Notebook | Approach |
+```mermaid
+flowchart LR
+  A[Written idea + optional reference] --> B[Five answers]
+  B --> C[Qwen director: shot plan]
+  C --> D[Qwen scriptwriter]
+  D --> E[XTTS narration + timing]
+  C --> F[LTX realistic clips]
+  E --> F
+  F --> G[Arabic/English captions + MP4]
+  E --> G
+```
+
+The director plans **shots and key moments**, not independent prompts for every image. The video model generates the intervening frames jointly. `timeline.json` records exact frame ranges; it is not a guarantee of frame-level control. The optional reference currently supplies the **first frame for the first clip**, not analysis of the entire reference video. Character identity across separately generated shots is not guaranteed.
+
+## Run on Colab
+
+Download this private repository as ZIP using GitHub **Code → Download ZIP**. Open a notebook in Colab using **File → Upload notebook**, choose a GPU runtime, and upload the repository ZIP when its first setup cell asks for it. Results are saved to Google Drive.
+
+| Goal | Notebook |
+|---|---|
+| New realistic video workflow | [03_realistic_video.ipynb](notebooks/03_realistic_video.ipynb) |
+| Ready Arabic/English voice only | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
+| Train the scriptwriter with QLoRA | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
+| Optional voice cloning and fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
+
+Start with the **[Arabic realistic-video guide](docs/REALISTIC_VIDEO.md)**. The default video profile is a **288×512, 24 FPS preview**, with one short clip tested before the full job. Model downloads are large; allow roughly 25 GB of free disk. Free-Colab GPU availability, memory sufficiency, runtime, and visual quality are not guaranteed. Higher resolution needs more GPU memory. No paid service or OpenAI model is used by this pipeline.
+
+## Local commands
+
+Use Python 3.12, ffmpeg, an Arabic-capable font, and a CUDA GPU for video. Install a compatible torch/torchaudio build first, then:
+
+```bash
+python -m pip install -r requirements/voice.txt -r requirements/video.txt
+python -m voice2reel.director --idea "A realistic video about a beginner programming mistake" --output outputs/realistic
+python -m voice2reel.voice.synthesize --script outputs/realistic/script.json --output outputs/realistic/narration.wav
+python -m voice2reel.realistic --project outputs/realistic --max-clips 1
+python -m voice2reel.realistic --project outputs/realistic
+```
+
+The director asks five questions. Use `--brief examples/realistic_semicolon/brief.json` instead for a reproducible brief. For a reference video, add `--reference-video /path/to/reference.mp4` to the director command. For voice cloning, add `--reference /path/to/voice.wav` to speech synthesis. Otherwise a preset AI voice is selected automatically.
+
+Each model runs in a separate process to release memory before the next stage. Completed clips resume after interruption using model/settings/timeline signatures and content hashes. Editing narration requires regenerating audio. Changed timing or visual settings invalidates the clip cache.
+
+## Models, data, and limits
+
+| Component | Model | Role |
 |---|---|---|
-| Text → ready-made Arabic/English AI voice | [Ready voice — start here](notebooks/00_ready_voice_ar_en.ipynb) | XTTS-v2 preset speakers; no recording or training |
-| Written idea → script and visual beats | [Scriptwriter QLoRA](notebooks/01_scriptwriter_qlora.ipynb) | Qwen2.5-1.5B-Instruct, NF4 + LoRA |
-| Script + reference voice → narration | [Arabic voice XTTS](notebooks/02_arabic_voice_xtts.ipynb) | XTTS-v2 baseline inference and GPT fine-tuning |
+| Director and scriptwriter | Qwen2.5-1.5B-Instruct | Two sequential text passes, structural validation, up to three repair attempts |
+| Narration | XTTS-v2 | Preset Arabic/English voice; optional reference voice |
+| Video | LTX-Video-0.9.5, 2B transformer | Text/image-conditioned realistic clips; experimental GPU integration |
 
-The notebooks target separate free-Colab T4 sessions, save checkpoints to Drive, and support private-repository ZIP uploads. Base weights download automatically at pinned revisions; no newly trained weights are shipped. Preset speech requires no recordings or training. Voice fine-tuning requires real recordings matching transcripts. The included 40 script examples and 120 recording prompts are a starter kit, not a production dataset.
+All base revisions are pinned in code. The training kit includes 40 authored script examples and 120 recording prompts, **not a production dataset or recorded speech**. Existing script training covers narration and legacy visual beats; it does not train the new director schema. Director/video fine-tuning is not implemented. Voice training needs real recordings with matching transcripts.
 
-See [dataset provenance](datasets/README.md), [research and model licenses](docs/RESEARCH.md), [evaluation](docs/EVALUATION.md), and [verified checks and remaining limits](docs/VALIDATION.md). XTTS weights and outputs are subject to the non-commercial CPML license.
+JSON validation cannot guarantee factual correctness, pronunciation, visual consistency, or instruction following. The original semicolon demo exposed a factual error; review educational scripts before publishing. Video models struggle with readable text and code, so captions are drawn afterward. This workflow does not provide lip sync, music generation, or complete reference-video analysis.
 
-See [the runnable video demo](docs/VIDEO_DEMO.md) for the first script → narration → stickman MP4 pipeline. The sections below describe the full product; the API and complete visual engine remain planned.
+XTTS weights and outputs use the **non-commercial CPML license**. See [research/licensing notes](docs/RESEARCH.md), [dataset provenance](datasets/README.md), [evaluation](docs/EVALUATION.md), and [verification record](docs/VALIDATION.md).
 
-## The idea
+## Existing demo and implementation
 
-The user provides a **written idea** and selects **Arabic or English**. The default narrator is a ready-made AI voice. An uploaded recording is optional, for users who choose voice cloning.
+The [original stickman demo](docs/VIDEO_DEMO.md) used actual Qwen and XTTS inference plus a fixed Pillow renderer. It remains a functional baseline. The previous product/renderer proposal is retained in [legacy design notes](docs/LEGACY_DESIGN.md).
 
-An AI scriptwriter expands the idea into a narration script. The speech model reads the script with the selected preset or cloned voice. The server creates the visuals, synchronizes them with the generated narration, and exports the finished video.
-
-In optional cloning mode, the voice sample supplies the voice identity. Its words do not need to match the idea or the script, and its duration does not determine the final video duration.
-
-## User flow
-
-1. Write an idea.
-2. Select the language and a preset AI voice, or optionally upload a voice sample.
-3. Let AI generate the script.
-4. Review and edit the script.
-5. Start generation: synthesize the narration in the selected voice, plan the scenes, and render the video on the server.
-6. Preview and download the final video.
-
-Example: a user writes “Explain why developers should write tests” and uploads a sample of their voice. AI writes a suitable script, the voice model reads that new script in the user's voice, and the server produces a video with matching scenes and captions.
-
-## Pipeline
-
-```text
-Written idea ──▶ AI scriptwriter ──▶ Editable script
-                                          │
-Preset voice / optional sample ──▶ TTS ◀───┘
-                                │
-                        Generated narration
-                                │
-                         Speech timestamps
-                                │
-Script + timestamps ──▶ AI Director ──▶ Scene-plan JSON
-                                              │
-                                          Validator
-                                              │
-                                       Server renderer
-                                              │
-                   Visuals + narration + optional music/SFX
-                                              │
-                                            ffmpeg
-                                              │
-                                       Downloadable MP4
-```
-
-The planned server orchestrates the entire process. The current experiment uses local Qwen and XTTS models; production model/provider selection remains open.
-
-## Responsibilities
-
-| Component | Responsibility |
-|---|---|
-| Input | Accept the written idea, language, and preset voice or optional reference recording |
-| Scriptwriter | Turn the written idea into an editable narration script |
-| Voice cloning / TTS | Read the approved script using a preset AI voice or optional reference voice |
-| Alignment | Obtain segment or word timestamps from the generated narration |
-| Director | Convert the script and speech timing into a structured scene plan |
-| Validator | Check supported visual values, timeline continuity, and media references |
-| Engine | Evaluate the validated scene plan into per-frame state |
-| Rig | Draw characters, panels, Arabic text, backgrounds, and effects |
-| Audio mixer | Combine narration with optional music and sound effects |
-| Encoder | Export the synchronized video and audio as MP4 |
-| API and worker | Store jobs, schedule stages, report progress, and serve results |
-
-**Core rendering principle:** the story is data, the engine is fixed. A new video changes the validated scene plan rather than the rendering source code.
-
-The engine decides what appears and when. The rig handles drawing. Scriptwriting and voice synthesis remain separate from rendering.
-
-## Video and timing
-
-The proposed initial visual style is vertical motion graphics at **1080 × 1920, 30 FPS**, using reusable characters, panels, captions, and effects. Other visual styles and output formats remain open decisions.
-
-The final timeline follows the **generated narration**, using provider timestamps or a separate alignment step.
-
-- Generate the script for the requested target duration.
-- Measure the synthesized narration before finalizing scene boundaries.
-- Synchronize scenes, captions, headlines, and sound cues to the speech.
-- If speech exceeds the target duration, revise the script and regenerate it or let the user accept a different duration. Do not silently cut spoken words.
-
-Voice-sample length, generated narration length, and target video length are separate concepts. Sample requirements depend on the selected voice-cloning model.
-
-## Scene-plan format
-
-The planned intermediate representation is versioned JSON validated with Pydantic.
-
-| Data | Purpose |
-|---|---|
-| Script revision | Identify the approved narration text |
-| Narration reference | Identify the generated audio artifact |
-| Duration | Actual final timeline duration |
-| Scenes | Contiguous character, camera, and prop states |
-| Captions | Speech-synchronized subtitles |
-| Headlines | Independent title overlays |
-| Events | Timed effects and sound cues |
-| Music settings | Optional background track configuration |
-
-The Director selects only supported poses, expressions, camera modes, and effects. It does not generate executable code.
-
-Planned validation rules:
-
-- The first scene starts at zero, scenes have no gaps or overlaps, and the last scene ends at the video duration.
-- Captions and headlines have positive durations and remain inside the timeline.
-- Highlighted text is a substring of the raw caption text before Arabic shaping.
-- Events stay inside the timeline.
-- The narration and scene plan belong to the same script revision.
-- The narration is not truncated by the video timeline.
-
-## Proposed backend
-
-**Python 3.11+ · FastAPI · Pydantic v2 · separate worker process · SQLite WAL · ffmpeg.**
-
-| Concern | Proposed choice |
-|---|---|
-| HTTP API | FastAPI + Uvicorn |
-| Validation | Shared Pydantic models |
-| Job store | SQLite WAL for an initial single-machine deployment |
-| Heavy stages | Worker with subprocess isolation and stage-specific timeouts |
-| Rendering | Python, NumPy, Pillow, and ffmpeg |
-| Arabic text | Centralized shaping and bidirectional text handling |
-| Scriptwriting | Provider-agnostic LLM interface |
-| Scene planning | Provider-agnostic Director with structured JSON output and bounded retries |
-| Voice cloning | XTTS-v2 experimental toolkit; production provider selection pending |
-| Alignment | Provider timestamps or a separate alignment tool |
-| Storage | Local disk behind a Storage interface; object storage later if needed |
-| Packaging | Docker image with pinned dependencies, ffmpeg, and fonts |
-
-The API validates inputs, stores jobs, and returns promptly. It does not render frames inside HTTP requests.
-
-Voice-model compute requirements must be evaluated separately from rendering. A local voice model may require a GPU; an external voice API has different cost and latency constraints.
-
-## Job lifecycle and review
-
-```text
-received
-  -> scripting
-  -> awaiting_review
-  -> queued
-  -> synthesizing_voice
-  -> aligning
-  -> planning
-  -> validating
-  -> rendering
-  -> mixing
-  -> done
-```
-
-Jobs may also become failed or cancelled. The voice stage synthesizes the script using the selected preset; reference-voice preparation is needed only for optional cloning.
-
-Review happens before voice generation and rendering. An explicit generate action starts the expensive stages.
-
-Every generation uses a fixed script revision. Editing the script invalidates its narration, timestamps, scene plan, and video. Editing only the scene plan invalidates the video and must preserve narration timing constraints.
-
-## Planned API
-
-These endpoints describe a proposed interface; they are not implemented.
-
-| Method | Path | Purpose |
-|---|---|---|
-| POST | /api/v1/jobs | Submit a written idea, language and preset speaker, or an optional voice sample; return 202 with job ID |
-| GET | /api/v1/jobs/{id} | Read status, stage progress, timings, and errors |
-| GET | /api/v1/jobs/{id}/script | Retrieve the generated script |
-| PUT | /api/v1/jobs/{id}/script | Save an edited script and invalidate dependent outputs |
-| GET | /api/v1/jobs/{id}/story | Retrieve the generated scene plan |
-| PUT | /api/v1/jobs/{id}/story | Validate and save an edited scene plan |
-| POST | /api/v1/jobs/{id}/render | Generate narration and video for the current approved script revision; idempotent while active |
-| GET | /api/v1/jobs/{id}/video | Download or stream the completed MP4 |
-| DELETE | /api/v1/jobs/{id} | Cancel the job and purge its artifacts |
-| GET | /health | Report worker availability, queue depth, and storage health |
-
-## Proposed repository layout
-
-Paths below are targets, not claims that these files already exist.
-
-```text
-voice2reel/
-├── voice2reel/
-│   ├── schema.py          # Script, scene-plan, and timeline validation
-│   ├── scriptwriter/      # Written idea -> narration script
-│   ├── voice/             # Voice-cloning provider and speech generation
-│   ├── alignment.py       # Generated speech -> timestamps
-│   ├── director/          # Script + timing -> scene-plan JSON
-│   ├── engine.py          # Scene plan + time -> frame state
-│   ├── rig/               # Reusable drawing primitives
-│   ├── audio.py           # Narration, music, and SFX mixing
-│   ├── render.py          # Validated plan + media -> MP4
-│   ├── jobs.py            # Job persistence and worker orchestration
-│   └── api/               # FastAPI endpoints
-├── tests/
-├── assets/fonts/          # Fonts and their licenses
-├── docker/Dockerfile
-└── data/                  # Runtime uploads and artifacts; gitignored
-```
-
-## Rendering and audio rules
-
-- Validate the scene plan before drawing frames.
-- Keep story-specific logic out of the reusable rig.
-- Keep Arabic shaping in one module and test Arabic mixed with Latin text.
-- Use resource-based font paths and avoid import-time rendering or exits.
-- Check ffmpeg exit codes and surface failures in job status.
-- Use the generated narration as the primary audio track.
-- Duck optional music and effects under speech.
-- Target approximately −14 LUFS for the final mix using two-pass loudness normalization.
-- Seed synthesized SFX per event with a stable digest so adding one event does not change other sounds.
-- Keep rendering deterministic for fixed scene plans, media, assets, and renderer versions. External AI outputs may vary and must be stored as artifacts.
-
-Cache voice synthesis by script content/revision, reference-voice hash or version, provider/model version, and synthesis settings. Cache final renders by the validated scene plan, narration content hash, renderer version, font/assets hashes, and audio settings.
-
-Validate uploaded audio using ffprobe and the selected model's format, size, and duration requirements. Use generated filenames and stage-specific timeouts. Recover or fail abandoned jobs after worker restarts.
-
-## Legacy renderer context
-
-Earlier design work references two scripts outside this repository: reel_v2.py and yellow_stripe_reel.py. They contain reusable motion-graphics techniques but hardcode each video's timeline.
-
-The planned refactor extracts a reusable rig and data-driven engine. Before visual improvements, compare frames and synthetic audio against legacy fixtures to establish parity. Voice-cloned narration is a new component and needs separate evaluation.
-
-Previously documented legacy issues to check when those scripts are imported:
-
-- Hardcoded font paths and import-time side effects.
-- Caption highlighting ignored by the drawing function.
-- Duplicate or unused pose definitions and layout values.
-- Unchecked ffmpeg failures.
-- Full-size background copies on every frame.
-- Global RNG order affecting synthesized audio.
-
-## Status and roadmap
-
-| Area | Current status |
-|---|---|
-| Product specification | Updated for written ideas and cloned-voice narration |
-| Legacy scripts | Previously documented as outside this repository |
-| Schema | Script/visual-beat models and narration-timeline checks implemented and tested |
-| Rig and engine | First fixed-style stickman renderer implemented; full visual engine and legacy parity remain planned |
-| Scriptwriter | QLoRA training, validated generation, and Colab notebook implemented; GPU evaluation pending |
-| Voice cloning and narration | Preset Arabic/English speech and optional cloning implemented; real recordings required only for fine-tuning |
-| Alignment and Director | Structured visual beats and per-segment synthesis timing implemented; word alignment and renderer scene plan remain planned |
-| Backend and worker | Not started |
-| User interface | Not started |
-
-Planned implementation order:
-
-1. Evaluate voice-cloning options for Arabic quality, voice similarity, sample requirements, compute needs, cost, and commercial terms.
-2. Define script, narration-artifact, and scene-plan schemas.
-3. Import and extract the reusable legacy rig, removing import-time side effects.
-4. Implement the data-driven engine and establish legacy parity before visual polish.
-5. Implement script generation and script review.
-6. Integrate voice cloning, narration generation, and timestamps.
-7. Generate and validate scene plans against actual narration timing.
-8. Render visuals and mix narration, music, and effects.
-9. Add the API, job worker, progress reporting, and user interface.
-10. Validate the complete flow: written idea + voice sample -> reviewed script -> narrated video -> download.
-
-## Open decisions
-
-| Question | Impact |
-|---|---|
-| Which LLM should write scripts and plan scenes? | Quality, cost, latency, and structured-output reliability |
-| Which voice-cloning model or provider? | Voice similarity, Arabic dialect support, hosting, and sample requirements |
-| Which timestamp/alignment method? | Caption and scene synchronization |
-| What video durations should be supported? | Script length and narration pacing |
-| Which visual styles should v1 include? | Rig capabilities and scene vocabulary |
-| One character or several? | Scene schema and layout |
-| Vertical only or other aspect ratios? | Relative layout and rendering dimensions |
-| Internal tool or public service? | Authentication, access isolation, storage, and deployment scope |
-
-## Short description
-
-Voice2Reel turns a written idea into a short video narrated in your own voice. AI writes the script, a voice-cloning model generates narration from your uploaded voice sample, and the server creates the visuals, synchronizes them with the speech, and exports the finished video.
-
+- `voice2reel/director.py`, `storyboard.py`: five-question brief, director → narration, frame timeline.
+- `voice2reel/realistic.py`: staged T5/LTX loading, image conditioning, resumable clips, captions, MP4 assembly.
+- `voice2reel/scriptwriter/`, `voice2reel/voice/`: training and inference tools.
+- `notebooks/`: four Colab entry points.
+- `tests/`: data, model API, timeline, encoding, and training machinery checks.

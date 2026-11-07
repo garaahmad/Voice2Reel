@@ -52,3 +52,17 @@ The result reveals a content-quality limitation: the final beat frames semicolon
 A real miniature H.264/AAC encode test checks the new renderer's output streams, dimensions, and duration. Rendering rejects mismatched script text, language, segment timing, and audio duration.
 
 The complete raw-model demonstration produced 28.672 seconds of Arabic narration and a 28.700-second MP4, 1080×1920, 30 FPS, H.264 video plus AAC at 24 kHz. Full ffmpeg decoding succeeded. Frames from all four beats were inspected for Arabic shaping and layout. The narration and script were not rewritten by the assistant. The drawings are produced by the fixed code renderer. No GPU was used.
+
+## Realistic workflow implementation (2026-11-07)
+
+- Full current local suite: **53 passed**; Ruff, module compilation, and dataset validation passed.
+- All **four** notebooks pass schema/syntax checks and contain no stored outputs.
+- Timeline tests cover audio-derived frame bounds, splitting long speech, LTX's 8n+1 frame constraint, stale narration, and mismatched scene counts.
+- A real ffmpeg test assembles three artificial color clips with Arabic captions and a tone into a 36-frame H.264/AAC MP4. This validates media assembly, not AI visual quality. The Arabic caption layout was inspected separately.
+- Actual Diffusers 0.35.2 LTXConditionPipeline calls with tiny random LTX weights pass for text conditioning and image conditioning. No pretrained LTX weights are used in those tests.
+- A separate tiny T5 test exercises the encoder-only pipeline with the video components absent, including embedding/mask order and shapes.
+- CUDA absence is detected before video-weight downloads. This environment has two CPU cores, 8 GiB RAM, and no GPU.
+- The first real Qwen director experiment produced Arabic visual prompts and one Portuguese caption despite the requested languages. The implementation now validates Latin-script visual prompts and rejects Arabic narration/captions without Arabic letters. These checks catch the observed failures; they are not comprehensive language identification or factual verification.
+- Additional raw-model attempts produced malformed JSON. Syntax repair is now explicit and logged alongside the original response, followed by unchanged schema/language validation. A repair test verifies that text is preserved and missing required scenes still fail validation. Constrained decoding was tried but rejected after observed multilingual failures; it is not used in the shipped pipeline.
+
+Full pretrained LTX inference, GPU NF4 T5 loading, free-Colab memory fit, end-to-end notebook execution, and realistic scene quality remain **unverified**. No realistic-video sample is claimed from this host. The existing stickman video remains the only complete pretrained-model demonstration generated here.
