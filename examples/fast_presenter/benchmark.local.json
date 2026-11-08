@@ -1,0 +1,58 @@
+{
+  "cpu_quota_cores": 2,
+  "model_downloads_included": false,
+  "script_source": "reviewed example, not AI-generated",
+  "measurements": {
+    "local_models_no_output_cache": {
+      "stages": {
+        "script_seconds": 0.0005224679998718784,
+        "voice_seconds": 2.702703310000288,
+        "video_seconds": 6.828385853999862
+      },
+      "cache_hits": {
+        "script": false,
+        "voice": false,
+        "video": false
+      },
+      "script_source": "provided",
+      "render": {
+        "wall_seconds": 6.822857353000018,
+        "fps": 24,
+        "width": 540,
+        "height": 960,
+        "frames": 746
+      },
+      "total_seconds": 9.531744021000122,
+      "video_duration": 31.079909297052154,
+      "target_duration_seconds": null,
+      "profile": "fast",
+      "voice_engine": "piper",
+      "synthetic_narration": true,
+      "subtitle_timing": "estimated phrase pacing",
+      "mouth_motion": "audio energy, not phoneme alignment",
+      "cli_wall_seconds": 9.761425208000219
+    },
+    "output_cache_hit": {
+      "stages": {
+        "script_seconds": 0.0005297880002217425,
+        "voice_seconds": 0.0017518390000077488,
+        "video_seconds": 0.003562677999980224
+      },
+      "cache_hits": {
+        "script": false,
+        "voice": true,
+        "video": true
+      },
+      "script_source": "provided",
+      "total_seconds": 0.006108093999955599,
+      "video_duration": 31.079909297052154,
+      "target_duration_seconds": null,
+      "profile": "fast",
+      "voice_engine": "piper",
+      "synthetic_narration": true,
+      "subtitle_timing": "estimated phrase pacing",
+      "mouth_motion": "audio energy, not phoneme alignment",
+      "cli_wall_seconds": 0.18825420000030135
+    }
+  }
+}

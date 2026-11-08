@@ -90,3 +90,11 @@ The product direction is now articulated 2D stickman animation; the realistic-vi
 The latest local suite passed **65 tests**, including fixed limb lengths for reachable/unreachable targets, deterministic seeking to an animation frame, and a real nine-second MP4 encode/decode. The study was encoded at 540×960, 30 FPS, H.264, with no audio; full decoding passed and representative action frames were inspected. Existing main's director sanitization change was preserved, and its integration test now checks the saved safe visuals rather than assuming every repair requires another model call.
 
 AI-driven animation plans, a broad motion library, scene transitions and narration integration with the new rig remain unfinished.
+
+## Fast presenter pipeline
+
+The new `voice2reel.presenter` path is implemented end to end. The local suite passed **79 tests** with Ruff, Python compilation, dataset validation and five empty-output notebook syntax/schema checks. New tests exercise compact model output compilation, rejection without a fabricated fallback, actual media encoding, invalid/stale timing, independent script/voice/video caches, corruption recovery, visual-only edits without repeated speech, atomic failed-render behavior, early request validation and a non-blocking job lock.
+
+Actual Piper Arabic and English weights ran on CPU. The reviewed Arabic example produced roughly 31 seconds of audio/video in approximately 10 seconds with local models and no output cache. A separate actual Qwen3 4B → Piper → MP4 run produced about 14 seconds of video in about 54 seconds. Raw responses, stage durations and compiled output are preserved under `examples/fast_presenter`; model downloads are excluded from these measurements. Reusing an identical reviewed-script output took about 0.2 seconds including CLI startup, without generating a new story.
+
+The Arabic/English examples are hand-authored/reviewed scripts, not raw AI output. The separate idea-driven sample is a raw project-model result and still needs language/editorial review. Representative frames were inspected, and complete MP4 decoding passed. Listening-quality and exact phoneme alignment are not claimed. GPU/Colab execution and timing are unmeasured; the new notebook is prepared but was not executed inside a real Colab allocation.

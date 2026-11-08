@@ -11,6 +11,7 @@ def test_notebooks_are_valid_and_have_no_stored_outputs():
         "01_scriptwriter_qlora.ipynb",
         "02_arabic_voice_xtts.ipynb",
         "03_realistic_video.ipynb",
+        "04_fast_stickman.ipynb",
     }
     for path in paths:
         notebook = nbformat.read(path, as_version=4)

@@ -1,0 +1,30 @@
+{
+  "title": "فاصلة صغيرة، وخطأ كبير",
+  "language": "ar",
+  "scenes": [
+    {
+      "narration": "فاصلة منقوطة واحدة في مكان خاطئ قد تغيّر سلوك برنامجك.",
+      "caption": "فاصلة صغيرة، وخطأ كبير",
+      "gesture": "shrug",
+      "emotion": "surprised",
+      "camera": "wide",
+      "visual": {"kind": "list", "items": ["المكان مهم", "راجع الشرط"], "code": ""}
+    },
+    {
+      "narration": "بعد قوس شرط إِف، تصنع الفاصلة المنقوطة جسمًا فارغًا، فتُنفّذ الكتلة التالية حتى لو كان الشرط خاطئًا.",
+      "caption": "هنا المشكلة",
+      "gesture": "point",
+      "emotion": "concerned",
+      "camera": "wide",
+      "visual": {"kind": "code", "items": ["فاصلة في المكان الخطأ"], "code": "if (ready); {\n  run();\n}"}
+    },
+    {
+      "narration": "احذف الفاصلة بعد الشرط، وضع الكتلة بين الأقواس المعقوفة، ثم اختبر الحالتين: صحيح وخاطئ.",
+      "caption": "اربط الكتلة بالشرط",
+      "gesture": "thumbs_up",
+      "emotion": "happy",
+      "camera": "medium",
+      "visual": {"kind": "code", "items": ["الكتلة مرتبطة بالشرط"], "code": "if (ready) {\n  run();\n}"}
+    }
+  ]
+}

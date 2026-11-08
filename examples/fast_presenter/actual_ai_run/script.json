@@ -1,0 +1,51 @@
+{
+  "title": "ثلاث نصائح لتعلّم البرمجة بشكل منظّم",
+  "language": "ar",
+  "scenes": [
+    {
+      "narration": "ابدأ بموضوع واحد وركز على فهمه بوضوح.",
+      "caption": "البدء بموضوع واحد",
+      "gesture": "shrug",
+      "emotion": "surprised",
+      "camera": "wide",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "التركيز",
+          "الوضوح"
+        ],
+        "code": ""
+      }
+    },
+    {
+      "narration": "طبق المعلومة بمثال بسيط لتعزيز الفهم.",
+      "caption": "تطبيق مثال بسيط",
+      "gesture": "point",
+      "emotion": "thinking",
+      "camera": "wide",
+      "visual": {
+        "kind": "flow",
+        "items": [
+          "التطبيق",
+          "الفهم"
+        ],
+        "code": ""
+      }
+    },
+    {
+      "narration": "راجع ما تعلّمتُه لضمان تثبيت المعرفة.",
+      "caption": "الإعادة والتحقق",
+      "gesture": "thumbs_up",
+      "emotion": "happy",
+      "camera": "medium",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "الإعادة",
+          "التحقق"
+        ],
+        "code": ""
+      }
+    }
+  ]
+}

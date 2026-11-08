@@ -41,3 +41,14 @@ The new default is [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B
 CPU inference uses [Unsloth's GGUF conversion](https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF), revision `a06e946bb6b655725eafa393f4a9745d460374c9`, file `Qwen3-4B-Instruct-2507-Q4_K_M.gguf`, SHA-256 `3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597`. This is a community conversion of the official model, not a quantization published by Qwen. llama-cpp-python 0.3.16 uses JSON mode, seed 42, temperature 0.2, top-p 0.8. GPU inference uses Transformers NF4 with greedy decoding; output equivalence is not claimed.
 
 [json-repair](https://github.com/mangiucugna/json_repair) repairs syntax only. Original/repaired outputs are retained, then schema and content checks run. Neither JSON mode nor model size guarantees factual accuracy.
+
+## Fast presenter speech and rendering
+
+The new fast path uses [Piper 1.3.0](https://github.com/OHF-Voice/piper1-gpl/tree/v1.3.0) and [its Python API](https://github.com/OHF-Voice/piper1-gpl/blob/v1.3.0/docs/API_PYTHON.md), with ONNX Runtime 1.23.2 CPU sessions limited to two intra-op threads and one inter-op thread by default. The renderer is local 2D drawing code with cached original artwork, not a video diffusion model.
+
+Voice repository: `rhasspy/piper-voices`, revision `e7229f7d33a10e145e109b886d661984201ac3c4`. Selected assets:
+
+- [Arabic Kareem medium model card](https://huggingface.co/rhasspy/piper-voices/blob/e7229f7d33a10e145e109b886d661984201ac3c4/ar/ar_JO/kareem/medium/MODEL_CARD): Arabic (Jordan), one speaker, 22,050 Hz; dataset terms linked to the source project, not declared unrestricted here.
+- [English Lessac medium model card](https://huggingface.co/rhasspy/piper-voices/blob/e7229f7d33a10e145e109b886d661984201ac3c4/en/en_US/lessac/medium/MODEL_CARD): English (US), one speaker, 22,050 Hz; the Lessac Blizzard 2013 data has its own license terms.
+
+Piper's maintained runtime is GPL-3.0. Voice/data rights are separate and require review. No voice weights or Instagram assets are redistributed in this repository. XTTS remains an optional slower cloning backend under its existing CPML constraints.

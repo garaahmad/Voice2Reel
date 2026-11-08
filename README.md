@@ -1,57 +1,70 @@
 # Voice2Reel
 
-Turn a **written idea** into an **animated stickman story** with expressive characters, flowing movement, purposeful camera work, motion graphics, and Arabic or English AI narration.
+Create a **2D cartoon-presenter reel** from a written idea or reviewed script, with expressive faces, gestures, animated explanatory panels, captions, and Arabic/English AI speech.
 
-**Current direction: polished 2D stickman animation.** The realistic-video experiment is superseded. A reference video is optional as a creative reference; it is separate from an optional recording for voice cloning.
+**Working local prototype:** the new fast pipeline runs end to end. It uses one compact text-model pass, local Piper speech, and CPU rendering. Character artwork is drawn in code and inspired by the [user's reference](docs/STICKMAN_REFERENCE.md); no assets were copied from the reel. Generated writing still needs editorial review. There is no web app or hosted job service yet.
 
-**Status: prototype.** Script/voice training and inference tools, a basic narrated stickman renderer, and a new silent motion study are implemented. The richer animation engine is not yet connected to AI-generated scene plans. Actual text-model tests exposed factual mistakes; generated narration still needs review. No custom-trained weights are shipped.
+## Start here
 
-## The intended experience
-
-1. Enter a written idea, optionally with a reference video.
-2. Answer at most five questions: audience, duration, language, characters/setting/visual mood, and the main message or facts.
-3. AI plans the story: scene composition, actions, interactions, expressions, camera movement, and timing.
-4. AI writes narration aligned with the scene goals; review the content.
-5. XTTS generates Arabic/English narration, with a preset voice or optional voice cloning.
-6. The animation engine evaluates character rigs, scene objects and keyframes against actual speech timing, then exports MP4 with captions.
-
-The current reference is a **cartoon presenter**: a prominent expressive face, a recognizable character design, substantial black limbs, visible hands and feet, explanatory gestures, and animated text/code/diagrams. Character design and presenter gestures take priority over walking and jumping demonstrations.
-
-See the [user-provided visual reference and design criteria](docs/STICKMAN_REFERENCE.md), and the [animation implementation notes](docs/STICKMAN_ANIMATION.md).
-
-## See the current motion study
+Use **[04_fast_stickman.ipynb](notebooks/04_fast_stickman.ipynb)** on Colab, or read the **[Arabic fast-workflow guide](docs/FAST_PRESENTER.md)**.
 
 ```bash
-python -m pip install -r requirements/render.txt
-python -m voice2reel.motion_preview --output outputs/stickman-motion-study.mp4
+# Python 3.12 on Linux/Colab; install ffmpeg and an Arabic-capable font.
+python -m pip install -r requirements/presenter.txt
+python -m voice2reel.presenter --script examples/fast_presenter/semicolon_ar.json --output outputs/presenter
 ```
 
-Requires ffmpeg and an Arabic-capable font. This CPU-rendered, silent nine-second study demonstrates walking, anticipation, reaching, prop contact, reaction, a jump, settling, facial animation, and a gentle camera push.
+This reviewed example needs **no GPU, Torch or text-model download**. It creates `script.json`, `narration.wav`, segment timings, `video.mp4`, progress and performance reports. For English, use `semicolon_en.json`.
 
-**The user rejected the first study’s character design. It remains a hand-authored engine test, not the approved visual target or a finished narrated film.** The AI-to-animation integration, broader actions and scene transitions remain to be built. It uses an initial minimal visual layout; the old grid/card layout remains in the separate baseline renderer.
+For a written idea on CPU, also install the optional GGUF backend:
 
-## Existing tools and Colab
+```bash
+python -m pip install --no-binary llama-cpp-python -r requirements/director-cpu.txt
+python -m voice2reel.presenter --idea "Explain a programming idea" --interactive --device cpu --output outputs/my-reel
+```
 
-Download this private repository with GitHub **Code → Download ZIP**. In Colab, use **File → Upload notebook**, then upload the source ZIP when asked. Results are saved to Drive.
+`--interactive` asks five questions: audience, target duration, language, message/facts, and visual focus. Supply flags instead for automation. The CPU backend downloads about 2.5 GB of Qwen3 weights once. On CUDA, install a suitable Torch build and `requirements/text.txt`, then use `--device cuda`. The Colab notebook handles CPU/GPU setup in idea mode; GPU is optional. GPU execution of this new flow has not been measured here.
 
-| Goal | Notebook or module |
+## What makes it fast?
+
+- AI writes only narration, headings and diagram labels in one pass. The engine compiles animation controls and computes frames directly.
+- Piper supplies fast local preset speech: Kareem for Arabic, Lessac for English.
+- Cached artwork, background/text layers and cropped character transforms reduce per-frame work.
+- Script, speech and video have separate content-verified caches. Visual edits preserve narration; changed speech invalidates the audio cache.
+- Default `fast`: 540×960 at 24 FPS. `quality`: 720×1280 output at 30 FPS.
+- One text attempt by default; `--text-attempts 2` explicitly permits another format-repair attempt.
+
+### Actual CPU measurements
+
+Measured on a two-core CPU quota, with model files already downloaded:
+
+| Run | Observed time |
 |---|---|
-| Ready Arabic/English AI voice | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
-| Scriptwriter QLoRA training baseline | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
-| Optional voice cloning and fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
-| New visual motion study | `python -m voice2reel.motion_preview` |
-| Basic script + speech → stickman MP4 | [Baseline renderer guide](docs/VIDEO_DEMO.md) |
+| Reviewed Arabic script → about 31 s of voiced video | about 10 s, including voice and rendering |
+| New written idea → complete AI-written/voiced video | about 54 s for a ~14 s sample; text generation took most of the time |
+| Identical reviewed-script job, existing outputs valid | about 0.2 s including CLI startup; reuses the existing video |
 
-The 2D drawing engine can run on CPU. GPU can accelerate the AI components and is needed for the supplied training experiments. The full polished stickman workflow does not yet have an end-to-end Colab notebook.
+These are observations, not service guarantees. Installation and first model downloads are excluded. AI writing on CPU still takes time; a cache hit is not generation of a new story. See [recorded measurements](examples/fast_presenter/benchmark.local.json) and the [actual AI run](examples/fast_presenter/actual_ai_run/README.md).
 
-## Implementation and limits
+## Character and animation
 
-- `voice2reel/motion_preview.py`: new animation study with articulated limbs, two-bone inverse kinematics, gait, expressions, prop response and camera movement.
-- `voice2reel/render.py`: existing basic renderer for validated script/audio timings. Its fixed visual vocabulary is a baseline, not the requested final animation engine.
-- `voice2reel/scriptwriter/`, `voice2reel/voice/`: model adaptation and inference tools.
-- `datasets/`: 40 authored script examples and 120 recording prompts; no recorded speech or production-sized dataset.
-- `voice2reel/director.py`, `storyboard.py`, `realistic.py`, and notebook `03_realistic_video.ipynb`: earlier realistic-video experiment, retained for reference. Their current shot format is not an advanced stickman animation format.
+The new renderer includes a beret-wearing character with separate eyes, eyebrows and mouth; visible hands and feet; six presenter gestures; expressions; pose blending and recovery; camera framing; code/list/flow/comparison panels; and Arabic/English text.
 
-Existing 1.5B adapters do not work with the separate Qwen3 4B experiment. JSON validation does not prove factual accuracy. See [verification](docs/VALIDATION.md), [dataset provenance](datasets/README.md), and [research/licensing](docs/RESEARCH.md). XTTS weights and outputs use the non-commercial CPML license.
+The mouth opening responds to audio energy. Subtitles use estimated phrase pacing. Neither is phoneme-level or word-level forced alignment. The renderer supports a finite presenter vocabulary, not arbitrary generated character actions or multiple-character scenes. Target duration guides writing; output length follows actual narration.
 
-The superseded realistic-video guide remains in [docs/REALISTIC_VIDEO.md](docs/REALISTIC_VIDEO.md). It is not the current product direction.
+Advanced reviewed scripts can select `gesture`, `emotion`, `camera`, and `visual` per scene. Existing legacy scripts with three to six beats can be adapted. Code snippets are drawn as text and never executed. See the sample JSON files and [guide](docs/FAST_PRESENTER.md).
+
+## Voice cloning and existing training tools
+
+Use `--voice-engine xtts --reference voice.wav` for optional cloning, after installing `requirements/voice.txt`. This is a slower mode. Preset XTTS speakers are also available through `--speaker`.
+
+| Tool | Entry point |
+|---|---|
+| Fast presenter video | [04_fast_stickman.ipynb](notebooks/04_fast_stickman.ipynb) |
+| Original ready XTTS voice | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
+| Original 1.5B scriptwriter QLoRA training | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
+| XTTS cloning/fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
+
+Fast text generation uses pinned Qwen3-4B-Instruct-2507 weights. The older 1.5B training adapters are not compatible with it. No newly trained weights are shipped. Piper's runtime is GPL-3.0; individual voice/data terms must also be reviewed. XTTS weights/outputs use non-commercial CPML. See [research and licenses](docs/RESEARCH.md).
+
+The previous stickman study and realistic-video experiment remain in the repository as historical work. Notebook 03 and `realistic.py` are not the default workflow. Reference videos currently guide design; the fast pipeline does not analyze arbitrary uploaded videos or clone their animation style automatically.

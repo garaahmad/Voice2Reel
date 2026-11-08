@@ -1,0 +1,27 @@
+{
+  "stages": {
+    "script_seconds": 49.399550311999974,
+    "voice_seconds": 1.5976508829999148,
+    "video_seconds": 3.2909977549998075
+  },
+  "cache_hits": {
+    "script": false,
+    "voice": false,
+    "video": false
+  },
+  "script_source": "ai",
+  "render": {
+    "wall_seconds": 3.2870997059999354,
+    "fps": 24,
+    "width": 540,
+    "height": 960,
+    "frames": 336
+  },
+  "total_seconds": 54.288792033999925,
+  "video_duration": 13.990022675736961,
+  "profile": "fast",
+  "voice_engine": "piper",
+  "synthetic_narration": true,
+  "subtitle_timing": "estimated phrase pacing",
+  "mouth_motion": "audio energy, not phoneme alignment"
+}

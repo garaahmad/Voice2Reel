@@ -1,0 +1,9 @@
+{
+  "title": "One semicolon changes the result",
+  "language": "en",
+  "scenes": [
+    {"narration":"A semicolon in the wrong place can change what your program does.","caption":"One small character","gesture":"shrug","emotion":"surprised","camera":"wide","visual":{"kind":"list","items":["Check the position","Read the condition"],"code":""}},
+    {"narration":"After the condition's closing parenthesis, a semicolon creates an empty if body. The next block runs independently.","caption":"An empty body","gesture":"point","emotion":"concerned","camera":"wide","visual":{"kind":"code","items":["The unintended semicolon"],"code":"if (ready); {\n  run();\n}"}},
+    {"narration":"Remove that semicolon, attach the block to the condition, and test both true and false cases.","caption":"Attach the block","gesture":"thumbs_up","emotion":"happy","camera":"medium","visual":{"kind":"code","items":["The condition controls the block"],"code":"if (ready) {\n  run();\n}"}}
+  ]
+}
