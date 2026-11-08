@@ -15,9 +15,9 @@ Turn a **written idea** into an **animated stickman story** with expressive char
 5. XTTS generates Arabic/English narration, with a preset voice or optional voice cloning.
 6. The animation engine evaluates character rigs, scene objects and keyframes against actual speech timing, then exports MP4 with captions.
 
-A stickman should walk into a scene, shift weight, reach for an object, react, and recover naturally. The target goes beyond changing a pose or moving a complete drawing up and down. Scenes, props, facial expressions and camera movement should carry the story together.
+The current reference is a **cartoon presenter**: a prominent expressive face, a recognizable character design, substantial black limbs, visible hands and feet, explanatory gestures, and animated text/code/diagrams. Character design and presenter gestures take priority over walking and jumping demonstrations.
 
-See the [Arabic animation direction and implementation notes](docs/STICKMAN_ANIMATION.md).
+See the [user-provided visual reference and design criteria](docs/STICKMAN_REFERENCE.md), and the [animation implementation notes](docs/STICKMAN_ANIMATION.md).
 
 ## See the current motion study
 
@@ -28,7 +28,7 @@ python -m voice2reel.motion_preview --output outputs/stickman-motion-study.mp4
 
 Requires ffmpeg and an Arabic-capable font. This CPU-rendered, silent nine-second study demonstrates walking, anticipation, reaching, prop contact, reaction, a jump, settling, facial animation, and a gentle camera push.
 
-**The study is hand-authored engine code, not a model-generated story or finished narrated film.** The AI-to-animation integration, broader actions and scene transitions remain to be built. It uses a new clean visual layout; the old grid/card layout remains in the separate baseline renderer.
+**The user rejected the first study’s character design. It remains a hand-authored engine test, not the approved visual target or a finished narrated film.** The AI-to-animation integration, broader actions and scene transitions remain to be built. It uses an initial minimal visual layout; the old grid/card layout remains in the separate baseline renderer.
 
 ## Existing tools and Colab
 
