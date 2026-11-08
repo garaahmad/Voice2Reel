@@ -2,14 +2,14 @@
 
 Turn a **written idea** into a short video with **realistic AI-generated scenes** and Arabic or English AI narration. A reference video and a voice-cloning recording are optional, separate inputs.
 
-**Status: experimental local/Colab toolkit.** The director, scriptwriter, speech, video-generation adapter, captioning, and assembly code are implemented. Actual Qwen and XTTS inference has run on CPU. Full realistic video generation with the LTX weights and free-Colab GPU execution have **not** been verified. No custom-trained model weights are shipped; the web application and server job queue remain future work.
+**Status: experimental local/Colab toolkit.** The director, scriptwriter, speech, video-generation adapter, captioning, and assembly code are implemented. Actual Qwen and XTTS inference has run on CPU. Full realistic video generation with the LTX weights and free-Colab GPU execution have **not** been verified. **Content review has rejected generated educational scripts; unattended publishing is not ready.** No custom-trained model weights are shipped; the web application and server job queue remain future work.
 
 ## The workflow
 
 1. Enter a written idea; optionally provide a reference video.
 2. Answer at most **five questions**: audience, duration, narration language, setting/characters, and the key message or facts.
 3. Qwen acts as a director: it writes a continuity description, shot prompts, camera/action descriptions, and beginning/end actions.
-4. A second Qwen pass writes narration following those shots. Review or edit the script.
+4. A second Qwen pass writes narration from the factual brief, following the shot order. Narrative roles are normalized so visual-plan guesses cannot become teaching claims. Review or edit the script.
 5. XTTS generates a ready-made AI voice in Arabic or English; optional voice cloning remains available.
 6. Actual speech timing determines each clip's frame range. LTX generates the visuals; the tools add captions and mux the narration into MP4.
 

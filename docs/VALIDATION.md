@@ -69,10 +69,16 @@ Full pretrained LTX inference, GPU NF4 T5 loading, free-Colab memory fit, end-to
 
 ## Director quality checks and model selection (2026-11-08)
 
-The 1.5B and 7B experiments passed some structural checks but failed content review: narration described a person's actions, mixed in unwanted language or programming placeholders, or gave weak explanations. Those runs are not accepted demonstrations. Model size alone did not solve the problem. Narration now receives the factual brief and localized shot goals, with Arabic instructions for Arabic output, instead of the full visual descriptions.
+The 1.5B and 7B experiments passed some structural checks but failed content review: narration described a person's actions, mixed in unwanted language or programming placeholders, or gave weak explanations. Those runs are not accepted demonstrations. Model size alone did not solve the problem. Narration now receives the factual brief and normalized narrative roles, with Arabic instructions for Arabic output, instead of the full visual descriptions.
 
 The current experimental default is Qwen3-4B-Instruct-2507. GPU inference uses the pinned official checkpoint; CPU inference uses Unsloth's pinned Q4_K_M conversion with a verified checksum. The separate 1.5B training baseline is preserved.
 
 Current local suite: **59 passed**, plus Ruff and notebook checks. Regression checks cover source-code requests, internal camera cuts, mixed-script captions, code read aloud, localized titles, and director-to-narrator data routing. These are content constraints, not a factual-accuracy benchmark. GPU/NF4 execution remains unverified.
 
 The CPU llama-cpp-python 0.3.16 runtime was built from source using GCC/G++. Prebuilt Linux wheels were incompatible with this host's C library. No GPU was used.
+
+A subsequent real Qwen3 run exposed factual contamination from free-form shot purposes. The compiler now replaces these with neutral narrative roles before the writer runs; only brief.message supplies factual content. Raw director responses remain in the trace. This constraint does not guarantee that the writer will always follow the brief.
+
+Manual review of the first completed Qwen3 script also rejected its factual wording. A follow-up source-grounded pass still confused the condition with its body. The project remains experimental; successful schema checks are not an acceptance criterion for educational accuracy. Review feedback is supplied to the same project model for correction, with original responses preserved.
+
+The final focused sample was also rejected: it described the condition as independent rather than distinguishing the empty body from the following independent block. See examples/model_quality_review. No new narration/video was produced from that rejected sample. The content-quality goal remains unmet.

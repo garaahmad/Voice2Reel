@@ -1,0 +1,24 @@
+{
+  "title": "شرح أخطاء المبتدئين في استخدام السيميكولون",
+  "continuity": "A young adult programmer in a navy hoodie sits at a wooden desk with a warm desk lamp, surrounded by notebooks and a coffee mug, in a quiet home office setting.",
+  "shots": [
+    {
+      "purpose": "تمهيد للفكرة",
+      "visual_prompt": "A slow push-in on hands resting on a notebook, fingers slightly curled as the person looks down at the page",
+      "opening_action": "The person flips a page in their notebook and stops, eyes scanning the lines",
+      "closing_action": "The person taps their finger twice on the page, then looks up with a thoughtful frown"
+    },
+    {
+      "purpose": "شرح الرسالة",
+      "visual_prompt": "A steady dolly-in on the person's face as they gently rub their temple and look at a blank screen",
+      "opening_action": "The person leans forward and taps the desk with one finger",
+      "closing_action": "They pause, then slowly remove their hand and look at the notebook with a puzzled expression"
+    },
+    {
+      "purpose": "خلاصة عملية",
+      "visual_prompt": "A slow tracking shot from the side, following the person as they write notes on a notepad with a pen",
+      "opening_action": "The person writes a short phrase on the notepad and pauses to look at it",
+      "closing_action": "They smile slightly and place the notepad down, then take a sip from their coffee mug"
+    }
+  ]
+}

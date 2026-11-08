@@ -62,6 +62,7 @@ def test_json_syntax_repair_keeps_text_and_still_requires_schema():
 @pytest.mark.parametrize("problem", ["code", "cuts", "text_request"])
 def test_director_repairs_prompts_and_records_actual_backend(tmp_path, problem):
     plan, script, _ = assets()
+    plan.shots[0].purpose = "Unsupported factual claim"
     bad = plan.model_dump()
     bad["shots"][0]["visual_prompt"] = {
         "code": "A screen displays if (x);", "cuts": "The camera cuts to a screen.",
@@ -90,6 +91,7 @@ def test_director_repairs_prompts_and_records_actual_backend(tmp_path, problem):
     assert narrator_input["message"] == brief.message
     assert len(narrator_input["shot_goals"]) == 3
     assert "visual_prompt" not in json.dumps(narrator_input)
+    assert "Unsupported factual claim" not in json.dumps(narrator_input)
     provenance = json.loads((tmp_path / "provenance.json").read_text())
     assert provenance["backend"] == "test-backend"
     assert json.loads((tmp_path / "generation_status.json").read_text())["status"] == "ready_for_speech"

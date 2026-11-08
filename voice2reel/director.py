@@ -100,6 +100,60 @@ def structured_response(generator, messages, validate, trace_path, max_tokens=22
     raise ValueError(f"Model failed validation after 3 attempts; inspect {trace_path}")
 
 
+def narrative_roles(count):
+    return ["تمهيد للفكرة" if i == 0 else "خلاصة عملية" if i == count - 1 else "شرح الرسالة" for i in range(count)]
+
+
+def write_narration(generator, brief, plan, output):
+    output = Path(output)
+    def check_narration(raw):
+        narration = Narration.model_validate_json(raw)
+        validate_narration_language(narration, brief.language)
+        if len(narration.beats) != len(plan.shots):
+            raise ValueError("One narration beat per director shot required")
+        return Script.model_validate({
+            "schema_version": 1, "title": narration.title, "language": brief.language,
+            "target_duration_seconds": brief.target_duration_seconds,
+            "beats": [{**beat.model_dump(), "pose": "IDLE", "camera": "medium"}
+                      for beat in narration.beats],
+        })
+
+    narration_prompt = (
+            "Write natural short narration following the director's shots in order. JSON only. "
+            "Use Arabic for ar or English for en in BOTH narration and caption. One sentence per "
+            "shot, about 10 to 18 words. Explain the supplied message accurately. No invented facts or generalizations. "
+            "The brief.message is the factual source; do not replace it with claims from the visual plan. "
+            "Teach the idea, rather than narrating what the person is doing. Never read source code aloud; "
+            "write technical terms as pronounceable words in the chosen language. "
+            "Do not describe camera instructions aloud. Return a JSON instance, not a schema. "
+            'Required structure: {"title":"short title in the narration language",'
+            '"beats":[{"narration":"spoken sentence","caption":"short caption in the SAME language"}]} '
+            f"Include exactly {len(plan.shots)} beats."
+    )
+    if brief.language == "ar":
+        narration_prompt = (
+            "أنت كاتب تعليق صوتي بالعربية. اشرح فكرة المستخدم وأوصل رسالته، ولا تصف حركات الشخصية أو الكاميرا. "
+            "الحقائق في message هي المرجع؛ لا تستبدلها بتخمينات. استخدم أهداف اللقطات لترتيب الشرح فقط. "
+            "اكتب عنوانًا عربيًا، ومقطعًا لكل هدف. كل مقطع جملة عربية واضحة قصيرة، نحو 10 إلى 18 كلمة، "
+            "وعنوانًا فرعيًا عربيًا قصيرًا. لا تقرأ أسطر كود أو علامات ترقيم حرفيًا؛ استخدم كلمات مفهومة منطوقة. "
+            "لا تبدأ بوصف شخص يكتب أو ينظر أو يتحرك. خاطب المشاهد بمعلومة مفيدة مرتبطة بالفكرة. "
+            'أرجع JSON فقط بهذا الشكل: {"title":"عنوان عربي","beats":'
+            '[{"narration":"الشرح المنطوق بالعربية","caption":"عنوان فرعي عربي"}]}. '
+            f"عدد المقاطع المطلوب بالضبط: {len(plan.shots)}."
+        )
+    narration_context = {
+        "idea": brief.idea, "audience": brief.audience, "language": brief.language,
+        "target_duration_seconds": brief.target_duration_seconds, "message": brief.message,
+        "shot_goals": narrative_roles(len(plan.shots)),
+    }
+    script = structured_response(generator, [
+        {"role": "system", "content": narration_prompt},
+        {"role": "user", "content": json.dumps(narration_context, ensure_ascii=False)},
+    ], check_narration, output / "script.trace.json", max_tokens=1200)
+    write_json(output / "script.json", script.model_dump())
+    return script
+
+
 def create_project(generator, brief, output):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -154,54 +208,12 @@ def create_project(generator, brief, output):
          "\nWrite continuity, visual_prompt, opening_action and closing_action in ENGLISH. "
          "Use physical actions and camera movement, not readable code on screen."},
     ], check_plan, output / "director.trace.json", max_tokens=500 * brief.shot_count)
+    for shot, role in zip(plan.shots, narrative_roles(len(plan.shots))):
+        shot.purpose = role
     write_json(output / "plan.json", plan.model_dump())
     write_json(output / "generation_status.json", {"status": "writing_script"})
 
-    def check_narration(raw):
-        narration = Narration.model_validate_json(raw)
-        validate_narration_language(narration, brief.language)
-        if len(narration.beats) != len(plan.shots):
-            raise ValueError("One narration beat per director shot required")
-        return Script.model_validate({
-            "schema_version": 1, "title": narration.title, "language": brief.language,
-            "target_duration_seconds": brief.target_duration_seconds,
-            "beats": [{**beat.model_dump(), "pose": "IDLE", "camera": "medium"}
-                      for beat in narration.beats],
-        })
-
-    narration_prompt = (
-            "Write natural short narration following the director's shots in order. JSON only. "
-            "Use Arabic for ar or English for en in BOTH narration and caption. One sentence per "
-            "shot, about 7 to 11 words. Explain the supplied message accurately. No invented facts or generalizations. "
-            "The brief.message is the factual source; do not replace it with claims from the visual plan. "
-            "Teach the idea, rather than narrating what the person is doing. Never read source code aloud; "
-            "write technical terms as pronounceable words in the chosen language. "
-            "Do not describe camera instructions aloud. Return a JSON instance, not a schema. "
-            'Required structure: {"title":"short title in the narration language",'
-            '"beats":[{"narration":"spoken sentence","caption":"short caption in the SAME language"}]} '
-            f"Include exactly {len(plan.shots)} beats."
-    )
-    if brief.language == "ar":
-        narration_prompt = (
-            "أنت كاتب تعليق صوتي بالعربية. اشرح فكرة المستخدم وأوصل رسالته، ولا تصف حركات الشخصية أو الكاميرا. "
-            "الحقائق في message هي المرجع؛ لا تستبدلها بتخمينات. استخدم أهداف اللقطات لترتيب الشرح فقط. "
-            "اكتب عنوانًا عربيًا، ومقطعًا لكل هدف. كل مقطع جملة عربية واضحة قصيرة، نحو 7 إلى 11 كلمة، "
-            "وعنوانًا فرعيًا عربيًا قصيرًا. لا تقرأ أسطر كود أو علامات ترقيم حرفيًا؛ استخدم كلمات مفهومة منطوقة. "
-            "لا تبدأ بوصف شخص يكتب أو ينظر أو يتحرك. خاطب المشاهد بمعلومة مفيدة مرتبطة بالفكرة. "
-            'أرجع JSON فقط بهذا الشكل: {"title":"عنوان عربي","beats":'
-            '[{"narration":"الشرح المنطوق بالعربية","caption":"عنوان فرعي عربي"}]}. '
-            f"عدد المقاطع المطلوب بالضبط: {len(plan.shots)}."
-        )
-    narration_context = {
-        "idea": brief.idea, "audience": brief.audience, "language": brief.language,
-        "target_duration_seconds": brief.target_duration_seconds, "message": brief.message,
-        "shot_goals": [shot.purpose for shot in plan.shots],
-    }
-    script = structured_response(generator, [
-        {"role": "system", "content": narration_prompt},
-        {"role": "user", "content": json.dumps(narration_context, ensure_ascii=False)},
-    ], check_narration, output / "script.trace.json", max_tokens=1200)
-    write_json(output / "script.json", script.model_dump())
+    script = write_narration(generator, brief, plan, output)
     write_json(output / "provenance.json", {
         "director_model": generator.model_id, "revision": generator.revision, "backend": generator.backend,
         "base_model": DIRECTOR_MODEL, "base_revision": DIRECTOR_REVISION,
