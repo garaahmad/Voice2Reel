@@ -162,6 +162,43 @@ def create_project(generator, brief, output):
 
     def check_plan(raw):
         plan = Plan.model_validate_json(raw)
+        # Video models cannot reliably render source code. If the language model
+        # includes code or technical instructions in visual fields, replace only
+        # those visual directions with safe, filmable physical actions. Keep the
+        # purpose and narration source separate; do not alter factual content.
+        safe_visuals = (
+            ("A slow push-in on the programmer at a wooden desk, laptop screen facing away from camera.",
+             "The programmer moves their hands toward the keyboard.",
+             "The programmer pauses and looks thoughtful."),
+            ("A medium shot of the programmer studying the softly glowing laptop, screen out of focus.",
+             "The programmer leans forward and looks puzzled.",
+             "The programmer gently rubs their forehead."),
+            ("A close-up of the programmer's hands above the keyboard, with the screen not visible.",
+             "The programmer begins typing carefully.",
+             "The programmer stops and lifts one hand."),
+            ("An over-the-shoulder shot of the programmer at the desk, monitor blurred and unreadable.",
+             "The programmer looks from the notebook toward the monitor.",
+             "The programmer nods as they notice something."),
+            ("A slow side-angle camera move showing the programmer working at the desk in warm light.",
+             "The programmer moves the mouse with concentration.",
+             "The programmer relaxes their shoulders."),
+            ("A medium shot of the programmer at the desk with a warm lamp in the background.",
+             "The programmer sets their hands down on the desk.",
+             "The programmer smiles with relief."),
+        )
+        forbidden = re.compile(
+            r"\b(if|for|while)\s*\(|console\.|[{};`]"
+            r"|\b(if statement|for loop|semicolon|source code|code editor)\b",
+            re.IGNORECASE,
+        )
+        for index, shot in enumerate(plan.shots):
+            visual_fields = (shot.visual_prompt, shot.opening_action, shot.closing_action)
+            if any(forbidden.search(text) for text in visual_fields):
+                visual, opening, closing = safe_visuals[index % len(safe_visuals)]
+                shot.visual_prompt = visual
+                shot.opening_action = opening
+                shot.closing_action = closing
+                print(f"Sanitized non-filmable visual directions in shot {index + 1}", flush=True)
         if len(plan.shots) != brief.shot_count:
             raise ValueError(f"Exactly {brief.shot_count} shots required")
         for shot in plan.shots:
