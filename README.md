@@ -1,81 +1,57 @@
 # Voice2Reel
 
-Turn a **written idea** into a short video with **realistic AI-generated scenes** and Arabic or English AI narration. A reference video and a voice-cloning recording are optional, separate inputs.
+Turn a **written idea** into an **animated stickman story** with expressive characters, flowing movement, purposeful camera work, motion graphics, and Arabic or English AI narration.
 
-**Status: experimental local/Colab toolkit.** The director, scriptwriter, speech, video-generation adapter, captioning, and assembly code are implemented. Actual Qwen and XTTS inference has run on CPU. Full realistic video generation with the LTX weights and free-Colab GPU execution have **not** been verified. **Content review has rejected generated educational scripts; unattended publishing is not ready.** No custom-trained model weights are shipped; the web application and server job queue remain future work.
+**Current direction: polished 2D stickman animation.** The realistic-video experiment is superseded. A reference video is optional as a creative reference; it is separate from an optional recording for voice cloning.
 
-## The workflow
+**Status: prototype.** Script/voice training and inference tools, a basic narrated stickman renderer, and a new silent motion study are implemented. The richer animation engine is not yet connected to AI-generated scene plans. Actual text-model tests exposed factual mistakes; generated narration still needs review. No custom-trained weights are shipped.
 
-1. Enter a written idea; optionally provide a reference video.
-2. Answer at most **five questions**: audience, duration, narration language, setting/characters, and the key message or facts.
-3. Qwen acts as a director: it writes a continuity description, shot prompts, camera/action descriptions, and beginning/end actions.
-4. A second Qwen pass writes narration from the factual brief, following the shot order. Narrative roles are normalized so visual-plan guesses cannot become teaching claims. Review or edit the script.
-5. XTTS generates a ready-made AI voice in Arabic or English; optional voice cloning remains available.
-6. Actual speech timing determines each clip's frame range. LTX generates the visuals; the tools add captions and mux the narration into MP4.
+## The intended experience
 
-```mermaid
-flowchart LR
-  A[Written idea + optional reference] --> B[Five answers]
-  B --> C[Qwen director: shot plan]
-  C --> D[Qwen scriptwriter]
-  D --> E[XTTS narration + timing]
-  C --> F[LTX realistic clips]
-  E --> F
-  F --> G[Arabic/English captions + MP4]
-  E --> G
-```
+1. Enter a written idea, optionally with a reference video.
+2. Answer at most five questions: audience, duration, language, characters/setting/visual mood, and the main message or facts.
+3. AI plans the story: scene composition, actions, interactions, expressions, camera movement, and timing.
+4. AI writes narration aligned with the scene goals; review the content.
+5. XTTS generates Arabic/English narration, with a preset voice or optional voice cloning.
+6. The animation engine evaluates character rigs, scene objects and keyframes against actual speech timing, then exports MP4 with captions.
 
-The director plans **shots and key moments**, not independent prompts for every image. The video model generates the intervening frames jointly. `timeline.json` records exact frame ranges; it is not a guarantee of frame-level control. The optional reference currently supplies the **first frame for the first clip**, not analysis of the entire reference video. Character identity across separately generated shots is not guaranteed.
+A stickman should walk into a scene, shift weight, reach for an object, react, and recover naturally. The target goes beyond changing a pose or moving a complete drawing up and down. Scenes, props, facial expressions and camera movement should carry the story together.
 
-## Run on Colab
+See the [Arabic animation direction and implementation notes](docs/STICKMAN_ANIMATION.md).
 
-Download this private repository as ZIP using GitHub **Code → Download ZIP**. Open a notebook in Colab using **File → Upload notebook**, choose a GPU runtime, and upload the repository ZIP when its first setup cell asks for it. Results are saved to Google Drive.
-
-| Goal | Notebook |
-|---|---|
-| New realistic video workflow | [03_realistic_video.ipynb](notebooks/03_realistic_video.ipynb) |
-| Ready Arabic/English voice only | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
-| Train the scriptwriter with QLoRA | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
-| Optional voice cloning and fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
-
-Start with the **[Arabic realistic-video guide](docs/REALISTIC_VIDEO.md)**. The default video profile is a **288×512, 24 FPS preview**, with one short clip tested before the full job. Model downloads are large; allow roughly 40 GB of free disk. Free-Colab GPU availability, memory sufficiency, runtime, and visual quality are not guaranteed. Higher resolution needs more GPU memory. No paid service or OpenAI model is used by this pipeline.
-
-## Local commands
-
-Use Python 3.12, ffmpeg, an Arabic-capable font, and a CUDA GPU for video. Install a compatible torch/torchaudio build first, then:
+## See the current motion study
 
 ```bash
-python -m pip install -r requirements/voice.txt -r requirements/video.txt
-python -m voice2reel.director --idea "A realistic video about a beginner programming mistake" --output outputs/realistic
-python -m voice2reel.voice.synthesize --script outputs/realistic/script.json --output outputs/realistic/narration.wav
-python -m voice2reel.realistic --project outputs/realistic --max-clips 1
-python -m voice2reel.realistic --project outputs/realistic
+python -m pip install -r requirements/render.txt
+python -m voice2reel.motion_preview --output outputs/stickman-motion-study.mp4
 ```
 
-The director asks five questions. Use `--brief examples/realistic_semicolon/brief.json` instead for a reproducible brief. For a reference video, add `--reference-video /path/to/reference.mp4` to the director command. For voice cloning, add `--reference /path/to/voice.wav` to speech synthesis. Otherwise a preset AI voice is selected automatically.
+Requires ffmpeg and an Arabic-capable font. This CPU-rendered, silent nine-second study demonstrates walking, anticipation, reaching, prop contact, reaction, a jump, settling, facial animation, and a gentle camera push.
 
-Each model runs in a separate process to release memory before the next stage. Completed clips resume after interruption using model/settings/timeline signatures and content hashes. Editing narration requires regenerating audio. Changed timing or visual settings invalidates the clip cache.
+**The study is hand-authored engine code, not a model-generated story or finished narrated film.** The AI-to-animation integration, broader actions and scene transitions remain to be built. It uses a new clean visual layout; the old grid/card layout remains in the separate baseline renderer.
 
-## Models, data, and limits
+## Existing tools and Colab
 
-| Component | Model | Role |
-|---|---|---|
-| Director and scriptwriter | Qwen3-4B-Instruct-2507 | Two sequential text passes, structural validation, up to three repair attempts |
-| Narration | XTTS-v2 | Preset Arabic/English voice; optional reference voice |
-| Video | LTX-Video-0.9.5, 2B transformer | Text/image-conditioned realistic clips; experimental GPU integration |
+Download this private repository with GitHub **Code → Download ZIP**. In Colab, use **File → Upload notebook**, then upload the source ZIP when asked. Results are saved to Drive.
 
-All base revisions are pinned in code. The realistic workflow uses Qwen3 4B; the separate QLoRA training notebook retains the lighter 1.5B baseline. The training kit includes 40 authored script examples and 120 recording prompts, **not a production dataset or recorded speech**. Existing script training covers narration and legacy visual beats; it does not train the new director schema. Director/video fine-tuning is not implemented. Voice training needs real recordings with matching transcripts.
+| Goal | Notebook or module |
+|---|---|
+| Ready Arabic/English AI voice | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
+| Scriptwriter QLoRA training baseline | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
+| Optional voice cloning and fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
+| New visual motion study | `python -m voice2reel.motion_preview` |
+| Basic script + speech → stickman MP4 | [Baseline renderer guide](docs/VIDEO_DEMO.md) |
 
-JSON validation cannot guarantee factual correctness, pronunciation, visual consistency, or instruction following. The original semicolon demo exposed a factual error; review educational scripts before publishing. Video models struggle with readable text and code, so captions are drawn afterward. This workflow does not provide lip sync, music generation, or complete reference-video analysis.
+The 2D drawing engine can run on CPU. GPU can accelerate the AI components and is needed for the supplied training experiments. The full polished stickman workflow does not yet have an end-to-end Colab notebook.
 
-XTTS weights and outputs use the **non-commercial CPML license**. See [research/licensing notes](docs/RESEARCH.md), [dataset provenance](datasets/README.md), [evaluation](docs/EVALUATION.md), and [verification record](docs/VALIDATION.md).
+## Implementation and limits
 
-## Existing demo and implementation
+- `voice2reel/motion_preview.py`: new animation study with articulated limbs, two-bone inverse kinematics, gait, expressions, prop response and camera movement.
+- `voice2reel/render.py`: existing basic renderer for validated script/audio timings. Its fixed visual vocabulary is a baseline, not the requested final animation engine.
+- `voice2reel/scriptwriter/`, `voice2reel/voice/`: model adaptation and inference tools.
+- `datasets/`: 40 authored script examples and 120 recording prompts; no recorded speech or production-sized dataset.
+- `voice2reel/director.py`, `storyboard.py`, `realistic.py`, and notebook `03_realistic_video.ipynb`: earlier realistic-video experiment, retained for reference. Their current shot format is not an advanced stickman animation format.
 
-The [original stickman demo](docs/VIDEO_DEMO.md) used actual Qwen and XTTS inference plus a fixed Pillow renderer. It remains a functional baseline. The previous product/renderer proposal is retained in [legacy design notes](docs/LEGACY_DESIGN.md).
+Existing 1.5B adapters do not work with the separate Qwen3 4B experiment. JSON validation does not prove factual accuracy. See [verification](docs/VALIDATION.md), [dataset provenance](datasets/README.md), and [research/licensing](docs/RESEARCH.md). XTTS weights and outputs use the non-commercial CPML license.
 
-- `voice2reel/director.py`, `storyboard.py`: five-question brief, director → narration, frame timeline.
-- `voice2reel/realistic.py`: staged T5/LTX loading, image conditioning, resumable clips, captions, MP4 assembly.
-- `voice2reel/scriptwriter/`, `voice2reel/voice/`: training and inference tools.
-- `notebooks/`: four Colab entry points.
-- `tests/`: data, model API, timeline, encoding, and training machinery checks.
+The superseded realistic-video guide remains in [docs/REALISTIC_VIDEO.md](docs/REALISTIC_VIDEO.md). It is not the current product direction.

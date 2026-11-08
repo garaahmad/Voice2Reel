@@ -74,19 +74,29 @@ def test_director_repairs_prompts_and_records_actual_backend(tmp_path, problem):
 
     class Generator:
         model_id, revision, backend = "test-model", "test-revision", "test-backend"
-        responses = iter([json.dumps(bad), plan.model_dump_json(), json.dumps(narration)])
+        director_calls = 0
         inputs = []
 
         def complete(self, messages, max_tokens):
             self.inputs.append(messages)
-            return next(self.responses)
+            if any('"shot_goals"' in message['content'] for message in messages):
+                return json.dumps(narration)
+            self.director_calls += 1
+            return json.dumps(bad) if self.director_calls == 1 else plan.model_dump_json()
 
     brief = Brief(idea="A conditional mistake", audience="Beginners", target_duration_seconds=15,
                   setting="Office", message="Review the conditional")
     generator = Generator()
     create_project(generator, brief, tmp_path)
     trace = json.loads((tmp_path / "director.trace.json").read_text())
-    assert len(trace) == 2 and "error" in trace[0]
+    assert json.loads(trace[0]["raw_response"]) == bad
+    if problem == "cuts":
+        assert len(trace) == 2 and "error" in trace[0]
+    else:
+        assert len(trace) == 1  # Existing main sanitizes unsupported code visuals.
+    saved = Plan.model_validate_json((tmp_path / 'plan.json').read_text())
+    visual_text = ' '.join(shot.visual_prompt for shot in saved.shots)
+    assert not any(term in visual_text for term in ('if (x);', 'for loop', 'cuts to'))
     narrator_input = json.loads(generator.inputs[-1][-1]["content"])
     assert narrator_input["message"] == brief.message
     assert len(narrator_input["shot_goals"]) == 3

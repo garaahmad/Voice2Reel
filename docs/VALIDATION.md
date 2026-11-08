@@ -82,3 +82,11 @@ A subsequent real Qwen3 run exposed factual contamination from free-form shot pu
 Manual review of the first completed Qwen3 script also rejected its factual wording. A follow-up source-grounded pass still confused the condition with its body. The project remains experimental; successful schema checks are not an acceptance criterion for educational accuracy. Review feedback is supplied to the same project model for correction, with original responses preserved.
 
 The final focused sample was also rejected: it described the condition as independent rather than distinguishing the empty body from the following independent block. See examples/model_quality_review. No new narration/video was produced from that rejected sample. The content-quality goal remains unmet.
+
+## Stickman direction and motion study
+
+The product direction is now articulated 2D stickman animation; the realistic-video experiment is superseded. A new hand-authored nine-second silent study runs on CPU and demonstrates gait, reaching, a reactive prop, expression changes, jumping, settling and a camera push. It is not an AI-generated or narrated film.
+
+The latest local suite passed **65 tests**, including fixed limb lengths for reachable/unreachable targets, deterministic seeking to an animation frame, and a real nine-second MP4 encode/decode. The study was encoded at 540×960, 30 FPS, H.264, with no audio; full decoding passed and representative action frames were inspected. Existing main's director sanitization change was preserved, and its integration test now checks the saved safe visuals rather than assuming every repair requires another model call.
+
+AI-driven animation plans, a broad motion library, scene transitions and narration integration with the new rig remain unfinished.
