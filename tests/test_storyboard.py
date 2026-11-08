@@ -7,14 +7,14 @@ import pytest
 import soundfile as sf
 
 from voice2reel.realistic import assemble, command, probe, validate_settings
-from voice2reel.director import Narration, clean_response, validate_narration_language
+from voice2reel.director import Narration, clean_response, create_project, validate_narration_language
 from voice2reel.scriptwriter.schema import Script
 from voice2reel.storyboard import Brief, Plan, QUESTIONS, build_timeline
 
 
 def assets():
     plan = Plan(title="الشرط", continuity="A programmer at a desk.", shots=[{
-        "purpose": "Explain a conditional", "visual_prompt": "A programmer studies a laptop, slow push-in.",
+        "purpose": "شرح الشرط", "visual_prompt": "A programmer studies a laptop, slow push-in.",
         "opening_action": "The programmer looks at the screen.", "closing_action": "The programmer nods.",
     }] * 3)
     script = Script(schema_version=1, title=plan.title, language="ar", target_duration_seconds=15,
@@ -57,6 +57,59 @@ def test_json_syntax_repair_keeps_text_and_still_requires_schema():
         Plan.model_validate_json(text)  # Missing shots cannot bypass the schema.
     valid = '{"text": "if (x); — راجع الشرط"}'
     assert clean_response(valid) == (valid, False)
+
+
+@pytest.mark.parametrize("problem", ["code", "cuts", "text_request"])
+def test_director_repairs_prompts_and_records_actual_backend(tmp_path, problem):
+    plan, script, _ = assets()
+    bad = plan.model_dump()
+    bad["shots"][0]["visual_prompt"] = {
+        "code": "A screen displays if (x);", "cuts": "The camera cuts to a screen.",
+        "text_request": "A paper shows a for loop in detail.",
+    }[problem]
+    narration = {"title": script.title, "beats": [
+        {"narration": beat.narration, "caption": beat.caption} for beat in script.beats
+    ]}
+
+    class Generator:
+        model_id, revision, backend = "test-model", "test-revision", "test-backend"
+        responses = iter([json.dumps(bad), plan.model_dump_json(), json.dumps(narration)])
+        inputs = []
+
+        def complete(self, messages, max_tokens):
+            self.inputs.append(messages)
+            return next(self.responses)
+
+    brief = Brief(idea="A conditional mistake", audience="Beginners", target_duration_seconds=15,
+                  setting="Office", message="Review the conditional")
+    generator = Generator()
+    create_project(generator, brief, tmp_path)
+    trace = json.loads((tmp_path / "director.trace.json").read_text())
+    assert len(trace) == 2 and "error" in trace[0]
+    narrator_input = json.loads(generator.inputs[-1][-1]["content"])
+    assert narrator_input["message"] == brief.message
+    assert len(narrator_input["shot_goals"]) == 3
+    assert "visual_prompt" not in json.dumps(narrator_input)
+    provenance = json.loads((tmp_path / "provenance.json").read_text())
+    assert provenance["backend"] == "test-backend"
+    assert json.loads((tmp_path / "generation_status.json").read_text())["status"] == "ready_for_speech"
+
+
+@pytest.mark.parametrize("code", ["if (x);", "if_statement"])
+def test_narration_rejects_code_read_aloud(code):
+    narration = Narration(title="راجع الشرط", beats=[{
+        "narration": f"يكتب المبرمج {code}", "caption": "راجع الشرط",
+    }] * 3)
+    with pytest.raises(ValueError, match="spoken words"):
+        validate_narration_language(narration, "ar")
+
+
+def test_narration_rejects_unrequested_script_in_mixed_caption():
+    narration = Narration(title="راجع الشرط", beats=[{
+        "narration": "راجع الشرط قبل التشغيل", "caption": "كتابة if و加分号",
+    }] * 3)
+    with pytest.raises(ValueError, match="Arabic/English letters"):
+        validate_narration_language(narration, "ar")
 
 
 def test_real_speech_timing_drives_frame_counts_and_split_limits():

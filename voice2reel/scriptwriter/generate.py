@@ -8,7 +8,8 @@ from voice2reel.scriptwriter.train import MODEL_ID, MODEL_REVISION
 
 
 class ScriptGenerator:
-    def __init__(self, adapter=None, device="auto", cpu_dtype="float32"):
+    def __init__(self, adapter=None, device="auto", cpu_dtype="float32", *,
+                 model_id=MODEL_ID, model_revision=MODEL_REVISION):
         import torch
         from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 
@@ -25,20 +26,34 @@ class ScriptGenerator:
                     load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.float16
                 ),
             )
-        self.tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, revision=MODEL_REVISION)
+        self.model_id, self.revision = model_id, model_revision
+        self.backend = "transformers"
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id, revision=model_revision)
         self.model = AutoModelForCausalLM.from_pretrained(
-            MODEL_ID,
-            revision=MODEL_REVISION,
+            model_id,
+            revision=model_revision,
             **options,
         )
         if adapter:
             from peft import PeftModel
 
             provenance = json.loads((Path(adapter) / "provenance.json").read_text())
-            if provenance["base_model"] != MODEL_ID or provenance["revision"] != MODEL_REVISION:
+            if provenance["base_model"] != model_id or provenance["revision"] != model_revision:
                 raise ValueError("Adapter base model/revision mismatch")
             self.model = PeftModel.from_pretrained(self.model, adapter)
         self.model.eval()
+
+    def complete(self, messages, max_tokens=1200):
+        import torch
+
+        inputs = self.tokenizer.apply_chat_template(
+            messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt"
+        ).to(self.model.device)
+        with torch.inference_mode():
+            result = self.model.generate(
+                **inputs, max_new_tokens=max_tokens, do_sample=False, pad_token_id=self.tokenizer.eos_token_id
+            )
+        return self.tokenizer.decode(result[0, inputs["input_ids"].shape[1]:], skip_special_tokens=True)
 
     def generate(self, idea, duration=30, attempts=3, language="ar", trace_path=None):
         import torch

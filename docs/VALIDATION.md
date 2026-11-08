@@ -55,7 +55,7 @@ The complete raw-model demonstration produced 28.672 seconds of Arabic narration
 
 ## Realistic workflow implementation (2026-11-07)
 
-- Full current local suite: **53 passed**; Ruff, module compilation, and dataset validation passed.
+- Local suite at this stage: **53 passed**; Ruff, module compilation, and dataset validation passed.
 - All **four** notebooks pass schema/syntax checks and contain no stored outputs.
 - Timeline tests cover audio-derived frame bounds, splitting long speech, LTX's 8n+1 frame constraint, stale narration, and mismatched scene counts.
 - A real ffmpeg test assembles three artificial color clips with Arabic captions and a tone into a 36-frame H.264/AAC MP4. This validates media assembly, not AI visual quality. The Arabic caption layout was inspected separately.
@@ -66,3 +66,13 @@ The complete raw-model demonstration produced 28.672 seconds of Arabic narration
 - Additional raw-model attempts produced malformed JSON. Syntax repair is now explicit and logged alongside the original response, followed by unchanged schema/language validation. A repair test verifies that text is preserved and missing required scenes still fail validation. Constrained decoding was tried but rejected after observed multilingual failures; it is not used in the shipped pipeline.
 
 Full pretrained LTX inference, GPU NF4 T5 loading, free-Colab memory fit, end-to-end notebook execution, and realistic scene quality remain **unverified**. No realistic-video sample is claimed from this host. The existing stickman video remains the only complete pretrained-model demonstration generated here.
+
+## Director quality checks and model selection (2026-11-08)
+
+The 1.5B and 7B experiments passed some structural checks but failed content review: narration described a person's actions, mixed in unwanted language or programming placeholders, or gave weak explanations. Those runs are not accepted demonstrations. Model size alone did not solve the problem. Narration now receives the factual brief and localized shot goals, with Arabic instructions for Arabic output, instead of the full visual descriptions.
+
+The current experimental default is Qwen3-4B-Instruct-2507. GPU inference uses the pinned official checkpoint; CPU inference uses Unsloth's pinned Q4_K_M conversion with a verified checksum. The separate 1.5B training baseline is preserved.
+
+Current local suite: **59 passed**, plus Ruff and notebook checks. Regression checks cover source-code requests, internal camera cuts, mixed-script captions, code read aloud, localized titles, and director-to-narrator data routing. These are content constraints, not a factual-accuracy benchmark. GPU/NF4 execution remains unverified.
+
+The CPU llama-cpp-python 0.3.16 runtime was built from source using GCC/G++. Prebuilt Linux wheels were incompatible with this host's C library. No GPU was used.

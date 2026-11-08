@@ -32,4 +32,12 @@ Selected [LTX-Video-0.9.5](https://huggingface.co/Lightricks/LTX-Video-0.9.5), r
 
 The maintained official pipeline source was checked for image conditioning, precomputed prompt embeddings, argument order, and frame constraints. Actual offline CPU tests exercise both conditioning paths with tiny random LTX weights. The real video weights were not downloaded or run on the CPU-only host. T4 memory/speed and end-to-end visual quality are unmeasured.
 
-T5 is loaded with [Transformers bitsandbytes NF4](https://huggingface.co/docs/transformers/v4.57.3/en/quantization/bitsandbytes), encodes prompts, then exits memory before the video transformer loads. Reference video support means extracting one conditioning frame; no vision-language model analyzes the full video. See the model repository license and existing XTTS CPML restrictions before product use.
+## Director model upgrade (2026-11-08)
+
+Earlier configurations with Qwen2.5 1.5B and 7B produced inadequate Arabic narration. Prompts and stage inputs also needed correction: narration now receives shot goals and the factual brief, with Arabic instructions for Arabic output. These were development experiments, not a controlled model benchmark.
+
+The new default is [Qwen3-4B-Instruct-2507](https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507), revision `cdbee75f17c01a7cc42f958dc650907174af0554`. Its official card documents improved instruction following, multilingual capabilities, non-thinking operation, and Transformers >=4.51 compatibility. The project pins 4.57.3. The original 1.5B QLoRA training notebook remains separate.
+
+CPU inference uses [Unsloth's GGUF conversion](https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF), revision `a06e946bb6b655725eafa393f4a9745d460374c9`, file `Qwen3-4B-Instruct-2507-Q4_K_M.gguf`, SHA-256 `3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597`. This is a community conversion of the official model, not a quantization published by Qwen. llama-cpp-python 0.3.16 uses JSON mode, seed 42, temperature 0.2, top-p 0.8. GPU inference uses Transformers NF4 with greedy decoding; output equivalence is not claimed.
+
+[json-repair](https://github.com/mangiucugna/json_repair) repairs syntax only. Original/repaired outputs are retained, then schema and content checks run. Neither JSON mode nor model size guarantees factual accuracy.

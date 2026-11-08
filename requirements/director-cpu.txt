@@ -1,0 +1,5 @@
+-e .
+huggingface-hub==0.36.0
+llama-cpp-python==0.3.16
+json-repair==0.64.6
+Pillow==13.0.0

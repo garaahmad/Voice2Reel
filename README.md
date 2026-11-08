@@ -38,7 +38,7 @@ Download this private repository as ZIP using GitHub **Code → Download ZIP**. 
 | Train the scriptwriter with QLoRA | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
 | Optional voice cloning and fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
 
-Start with the **[Arabic realistic-video guide](docs/REALISTIC_VIDEO.md)**. The default video profile is a **288×512, 24 FPS preview**, with one short clip tested before the full job. Model downloads are large; allow roughly 25 GB of free disk. Free-Colab GPU availability, memory sufficiency, runtime, and visual quality are not guaranteed. Higher resolution needs more GPU memory. No paid service or OpenAI model is used by this pipeline.
+Start with the **[Arabic realistic-video guide](docs/REALISTIC_VIDEO.md)**. The default video profile is a **288×512, 24 FPS preview**, with one short clip tested before the full job. Model downloads are large; allow roughly 40 GB of free disk. Free-Colab GPU availability, memory sufficiency, runtime, and visual quality are not guaranteed. Higher resolution needs more GPU memory. No paid service or OpenAI model is used by this pipeline.
 
 ## Local commands
 
@@ -60,11 +60,11 @@ Each model runs in a separate process to release memory before the next stage. C
 
 | Component | Model | Role |
 |---|---|---|
-| Director and scriptwriter | Qwen2.5-1.5B-Instruct | Two sequential text passes, structural validation, up to three repair attempts |
+| Director and scriptwriter | Qwen3-4B-Instruct-2507 | Two sequential text passes, structural validation, up to three repair attempts |
 | Narration | XTTS-v2 | Preset Arabic/English voice; optional reference voice |
 | Video | LTX-Video-0.9.5, 2B transformer | Text/image-conditioned realistic clips; experimental GPU integration |
 
-All base revisions are pinned in code. The training kit includes 40 authored script examples and 120 recording prompts, **not a production dataset or recorded speech**. Existing script training covers narration and legacy visual beats; it does not train the new director schema. Director/video fine-tuning is not implemented. Voice training needs real recordings with matching transcripts.
+All base revisions are pinned in code. The realistic workflow uses Qwen3 4B; the separate QLoRA training notebook retains the lighter 1.5B baseline. The training kit includes 40 authored script examples and 120 recording prompts, **not a production dataset or recorded speech**. Existing script training covers narration and legacy visual beats; it does not train the new director schema. Director/video fine-tuning is not implemented. Voice training needs real recordings with matching transcripts.
 
 JSON validation cannot guarantee factual correctness, pronunciation, visual consistency, or instruction following. The original semicolon demo exposed a factual error; review educational scripts before publishing. Video models struggle with readable text and code, so captions are drawn afterward. This workflow does not provide lip sync, music generation, or complete reference-video analysis.
 
