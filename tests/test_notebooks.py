@@ -14,6 +14,7 @@ def test_notebooks_are_valid_and_have_no_stored_outputs():
         "04_fast_stickman.ipynb",
         "05_quality_loop.ipynb",
         "06_stickman_generator.ipynb",
+        "07_stickman_full_production.ipynb",
     }
     for path in paths:
         notebook = nbformat.read(path, as_version=4)

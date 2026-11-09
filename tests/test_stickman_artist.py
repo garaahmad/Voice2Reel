@@ -107,6 +107,23 @@ def test_single_stickman_notebook_covers_data_training_and_video():
     assert "no expert review" in source
 
 
+def test_full_production_notebook_reuses_one_training_results_file():
+    path = ROOT / "notebooks" / "07_stickman_full_production.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    source = "\n".join(cell.source for cell in notebook.cells)
+    assert "model_training_results.json" in source
+    assert "نتائج_تدريب_الموديل.json" in source
+    assert "FORCE_RETRAIN" in source
+    assert "reused_training" in source
+    assert "VIDEO_REQUESTS" in source and "source_text" in source
+    assert "ScriptGenerator" in source and "SYSTEM_PROMPT" in source
+    assert "silent_video.mp4" in source
+    assert "narration.mp3" in source
+    assert "final_video.mp4" in source
+    assert "production_report.json" in source
+    assert "05_quality_loop.ipynb" in source
+
+
 def test_vector_renderer_draws_connected_neck_and_png(tmp_path):
     pytest.importorskip("PIL.Image")
     pytest.importorskip("arabic_reshaper")

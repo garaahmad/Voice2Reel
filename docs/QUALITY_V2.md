@@ -1,6 +1,6 @@
 # Measured v2 quality loop
 
-**Status (2026-11-09):** the CPU-measurable front-end gate has been built, fitted, improved over three documented rounds, and evaluated once on the held-out test split. A separate **60,000-row Stickman drawing corpus** and its own three-round CPU measurement loop have also been added and evaluated once on a held-out test split. Both are measured on authored synthetic CPU data only. A single end-to-end Stickman notebook (`06_stickman_generator.ipynb`) now chains data validation, CPU/MLP training, deterministic frame generation, MP4 assembly and a pipeline report. The Qwen scriptwriter training cycles are prepared for the user's Colab T4 GPU in `notebooks/05_quality_loop.ipynb`; they have **not** been executed in this sandbox (no GPU, no Torch/transformers weights, Hugging Face blocked). No 90% claim is made about the production writer, voice naturalness, factual accuracy, subjective video quality, or professional drawing aesthetics.
+**Status (2026-11-09):** the CPU-measurable front-end gate has been built, fitted, improved over three documented rounds, and evaluated once on the held-out test split. A separate **60,000-row Stickman drawing corpus** and its own three-round CPU measurement loop have also been added and evaluated once on a held-out test split. Both are measured on authored synthetic CPU data only. Notebook `06_stickman_generator.ipynb` chains data validation, CPU/MLP training, deterministic frame generation and MP4 assembly. Notebook `07_stickman_full_production.ipynb` adds a **train-once** studio: it saves `model_training_results.json` / `نتائج_تدريب_الموديل.json` after one Qwen LoRA + Stickman MLP training run, then reuses that file to generate Qwen content from a title/idea/source text, a silent video, scene audio, and a synced final MP4 without retraining per video. It has **not** been executed in this sandbox (no GPU/Hugging Face access). The Qwen scriptwriter training cycles are prepared for the user's Colab T4 GPU in `notebooks/05_quality_loop.ipynb`; they have **not** been executed in this sandbox (no GPU, no Torch/transformers weights, Hugging Face blocked). No 90% claim is made about the production writer, voice naturalness, factual accuracy, subjective video quality, or professional drawing aesthetics.
 
 ## What was actually measured
 
@@ -42,7 +42,7 @@ Composite score = `0.30 × tashkeel word accuracy + 0.30 × codeswitch exact rat
 - Stickman corpus: 60,000 disjoint rows (50,000/5,000/5,000), unique IDs, 18 keypoints, 14 features, per-row style, 13 named defects in every split, professional rows with no rule violations and connected neck/head/torso, defect rows with exactly one reconstructed violation, actor boxes inside safe canvas zones, manifest/asset mirrors, and byte reproducibility via `scripts/build_stickman_drawing_data.py --check`;
 - recomputation of `examples/stickman_drawing/artist_rounds.json` by `scripts/check_data.py`, which fails if the committed CPU measurement drifts.
 
-`ruff check .` and `git diff --check` pass. With a local `ffmpeg` binary shim, `pytest -q --ignore=tests/test_training_smoke.py` reports `88 passed, 3 skipped, 17 failed`; every failure is a missing optional package in this sandbox (`torch`, `ffprobe`, `TTS`, `huggingface_hub`, `diffusers`, `peft`) that CI installs. The targeted suites (`test_arabic_text`, `test_motion_plan`, `test_text_layout`, `test_quality_gate`, `test_evaluation`, `test_presenter`, `test_notebooks`, `test_motion_preview`, `test_sound_design`, `test_stickman_artist`) pass: **51 passed, 1 skipped**. Full CI installs the missing packages and runs the complete suite.
+`ruff check .` and `git diff --check` pass. With a local `ffmpeg` binary shim, `pytest -q --ignore=tests/test_training_smoke.py` reports `89 passed, 3 skipped, 17 failed`; every failure is a missing optional package in this sandbox (`torch`, `ffprobe`, `TTS`, `huggingface_hub`, `diffusers`, `peft`) that CI installs. The targeted suites (`test_arabic_text`, `test_motion_plan`, `test_text_layout`, `test_quality_gate`, `test_evaluation`, `test_presenter`, `test_notebooks`, `test_motion_preview`, `test_sound_design`, `test_stickman_artist`) pass: **52 passed, 1 skipped**. Full CI installs the missing packages and runs the complete suite.
 
 ## Production wiring
 
@@ -74,6 +74,18 @@ Data/render repairs made during the loop: added explicit `head_bottom`/`neck` jo
 
 **What `0.9299` does not mean:** it is not subjective professional aesthetics, not human-reviewed artwork, not a neural image generator, and not improved production video/`Qwen3-4B` weights. A real image-diffusion renderer would require a separate licensed raster dataset and GPU training. The fitted CPU models improve joint prediction and defect detection only on these authored synthetic splits.
 
+## Notebook 07: train once, reuse for every video
+
+`notebooks/07_stickman_full_production.ipynb` implements the user's requested production order without retraining for each video:
+
+1. Resource setup + `scripts/check_data.py` on a Colab T4 GPU.
+2. **One** training cell: `Qwen2.5-1.5B-Instruct` LoRA adapter, 18-joint Stickman MLP, defect detector and CPU gate. It writes `outputs/stickman_studio/model_training_results.json` and an Arabic-named copy `نتائج_تدريب_الموديل.json`.
+3. Later cells load that file automatically; `FORCE_RETRAIN = False` skips training. Changing the video idea and re-running from the content cell does **not** retrain.
+4. User-editable `VIDEO_REQUESTS` contains `title`, `idea`, `source_text`; Qwen generates the full per-scene narration/captions/poses/cameras. Multiple ideas can be queued with `GENERATE_ALL_IDEAS = True`.
+5. Pipeline order: **silent video** from saved MLP joints → **per-scene audio** → re-time frames to measured audio durations → **muxed final MP4** + `production_report.json`.
+
+This is a demo production studio, not a neural image generator and not licensed commercial TTS: `edge-tts` is optional/external and silent audio is the fallback. It uses the trainable `Qwen2.5-1.5B` adapter, not production `Qwen3-4B`/GGUF; notebook 05 and `final_report.json` remain separate. No human editorial/aesthetic review is included.
+
 ## What the 90% does **not** mean
 
 The target was reached only on authored synthetic splits for three front-end tasks. It does **not** prove:
@@ -82,10 +94,11 @@ The target was reached only on authored synthetic splits for three front-end tas
 - naturalness of Edge/Piper/XTTS speech or pronunciation of unrecorded real voices;
 - subjective comfort of the stickman for real viewers, nor subjective professional drawing aesthetics from the separate `0.9299` Stickman CPU score;
 - quality of the production `Qwen3-4B`/GGUF writer, which is a different model from the trainable `Qwen2.5-1.5B` adapter;
-- real-world Arabic dialect coverage (data is MSA-style synthetic).
+- real-world Arabic dialect coverage (data is MSA-style synthetic);
+- production readiness of the notebook 07 demo video: no licensed TTS, no human review, no neural image generator, and no measured `Qwen3-4B` writer quality.
 
 Notebook 05 measures the QLoRA writer separately on the user's GPU with `valid_rate`, `first_pass_rate`, `mean_content_f1`, and a composite score; it evaluates `test` once, writes `final_report.json`, and explicitly records whether the target was reached. Until that report exists, the writer's GPU quality is **unmeasured**.
 
 ## Next required step
 
-Run `notebooks/05_quality_loop.ipynb` on a Colab T4 GPU, save `final_report.json`, and review generated scripts manually. If the writer score is below target, improve the authored `scripts/build_datasets.py` banks (more real-reviewed ideas, not just more templates), regenerate with `--check`, and repeat the documented cycles. `notebooks/06_stickman_generator.ipynb` is the one-notebook Stickman path (data → training → video → report); it does **not** replace the GPU writer loop and does **not** produce the Qwen `final_report.json`. For voice, record the 140 prompts with consent and a documented license before claiming any speech-quality improvement. For drawing, obtain expert human review of real rendered frames before claiming professional aesthetics, and build a separately licensed raster corpus if a neural image generator is ever wanted.
+Run `notebooks/05_quality_loop.ipynb` on a Colab T4 GPU, save `final_report.json`, and review generated scripts manually. If the writer score is below target, improve the authored `scripts/build_datasets.py` banks (more real-reviewed ideas, not just more templates), regenerate with `--check`, and repeat the documented cycles. `notebooks/06_stickman_generator.ipynb` is the drawing-data/demo path, and `notebooks/07_stickman_full_production.ipynb` is the train-once Qwen+voice+video studio; neither replaces the GPU writer loop and neither produces the Qwen `final_report.json`. For voice, record the 140 prompts with consent and a documented license before claiming any speech-quality improvement. For drawing, obtain expert human review of real rendered frames before claiming professional aesthetics, and build a separately licensed raster corpus if a neural image generator is ever wanted.
