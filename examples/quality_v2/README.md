@@ -10,4 +10,4 @@ It is a **real CPU measurement** on the authored synthetic splits, not a hand-wr
 
 Do not cite this number as production video/writer/voice quality.
 
-For the separate large Stickman drawing corpus and its measured CPU loop, see [stickman_drawing/artist_rounds.json](../stickman_drawing/artist_rounds.json), [sample frames](../stickman_drawing/samples), and `notebooks/06_stickman_artist.ipynb`.
+For the separate large Stickman drawing corpus, its measured CPU loop, and the single end-to-end generator/video notebook, see [stickman_drawing/artist_rounds.json](../stickman_drawing/artist_rounds.json), [sample frames](../stickman_drawing/samples), and `notebooks/06_stickman_generator.ipynb`.

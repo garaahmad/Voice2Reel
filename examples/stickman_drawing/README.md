@@ -41,6 +41,7 @@ All PNGs are deterministic vector renders from the corpus, produced by `voice2re
 - Assistant-authored synthetic CC0-1.0 vector plans, with **no expert review** and no scraped artwork.
 - The fitted models are small CPU ridge/max-margin models. They improve joint prediction and defect detection **on these authored splits**; they do not change `Qwen` weights, the production `Qwen3-4B` writer, voice, or video quality.
 - `0.9299` is not a subjective professional-aesthetics score. A neural image generator would need a separately licensed raster dataset and GPU training.
-- The QLoRA writer loop and `final_report.json` still require the user's Colab T4 GPU in `notebooks/05_quality_loop.ipynb`. Notebook `06_stickman_artist.ipynb` reproduces this CPU drawing loop.
+- The QLoRA writer loop and `final_report.json` still require the user's Colab T4 GPU in `notebooks/05_quality_loop.ipynb`.
+- For the Stickman path, run **only** `notebooks/06_stickman_generator.ipynb`: it validates the corpus, fits the CPU gate, trains a PyTorch MLP joint generator, renders 240 frames, assembles `outputs/stickman_pipeline/stickman_demo.mp4`, and writes `stickman_pipeline_report.json`. The video is a deterministic vector demo with silent audio by default; optional `edge-tts` is not cleared for commercial use. It does not train `Qwen`.
 
 See [`docs/QUALITY_V2.md`](../../docs/QUALITY_V2.md) for the full quality report and limitations.

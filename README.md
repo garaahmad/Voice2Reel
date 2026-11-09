@@ -57,7 +57,7 @@ The [earlier ~10-second CPU benchmark](examples/fast_presenter/benchmark.local.j
 | Original 1.5B QLoRA scriptwriter training | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
 | XTTS cloning/fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
 | Measured v2 quality loop (CPU gate + GPU QLoRA cycles) | [05_quality_loop.ipynb](notebooks/05_quality_loop.ipynb) |
-| Large Stickman drawing corpus + CPU measurement loop | [06_stickman_artist.ipynb](notebooks/06_stickman_artist.ipynb) |
+| One end-to-end Stickman generator notebook (data → training → video → report) | [06_stickman_generator.ipynb](notebooks/06_stickman_generator.ipynb) |
 
 ## v2 Arabic, code-switching and motion data
 
@@ -82,7 +82,9 @@ python -m voice2reel.stickman_artist --output examples/stickman_drawing/artist_r
 python -m voice2reel.stickman_artist --render-samples examples/stickman_drawing/samples
 ```
 
-`voice2reel/stickman_artist.py` fits a small CPU ridge model for joint prediction and a learned max-margin defect detector. Three documented rounds reach `0.9304` on validation and `0.9299` on the held-out test split; see [artist_rounds.json](examples/stickman_drawing/artist_rounds.json), [sample frames](examples/stickman_drawing/samples) and [QUALITY_V2.md](docs/QUALITY_V2.md). This is a measured synthetic CPU benchmark, **not** a claim about subjective professional aesthetics, production video quality, or improved `Qwen` weights. Notebook 06 reproduces it on CPU; notebook 05 still needs the user's T4 GPU for the writer.
+`voice2reel/stickman_artist.py` fits a small CPU ridge model for joint prediction and a learned max-margin defect detector. Three documented rounds reach `0.9304` on validation and `0.9299` on the held-out test split; see [artist_rounds.json](examples/stickman_drawing/artist_rounds.json), [sample frames](examples/stickman_drawing/samples) and [QUALITY_V2.md](docs/QUALITY_V2.md). This is a measured synthetic CPU benchmark, **not** a claim about subjective professional aesthetics, production video quality, or improved `Qwen` weights.
+
+**Run one notebook for the whole Stickman path:** `notebooks/06_stickman_generator.ipynb`. It regenerates/validates the 60k corpus, fits the CPU gate, trains a small PyTorch MLP that predicts the 18 joints, renders 240 deterministic vector frames from those predictions, assembles `outputs/stickman_pipeline/stickman_demo.mp4`, and writes `stickman_pipeline_report.json`. It works on CPU and uses T4 automatically if present. It does **not** train `Qwen`; notebook 05 still needs the user's T4 GPU for the writer and `final_report.json`.
 
 For cloning, install `requirements/voice.txt` and select `--voice-engine xtts --reference voice.wav`. It is slower. Older 1.5B adapters are incompatible with the Qwen3 4B writer; no new trained weights are shipped.
 

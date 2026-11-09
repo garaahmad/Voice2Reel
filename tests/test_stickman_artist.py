@@ -3,6 +3,7 @@
 import math
 from pathlib import Path
 
+import nbformat
 import pytest
 
 from voice2reel.stickman_artist import (
@@ -91,6 +92,19 @@ def test_quality_loop_is_measured_and_improves_with_more_data():
     assert all(report["integrity"].values())
     committed = (ROOT / "examples" / "stickman_drawing" / "artist_rounds.json").read_text(encoding="utf-8")
     assert report == __import__("json").loads(committed)
+
+
+def test_single_stickman_notebook_covers_data_training_and_video():
+    path = ROOT / "notebooks" / "06_stickman_generator.ipynb"
+    notebook = nbformat.read(path, as_version=4)
+    source = "\n".join(cell.source for cell in notebook.cells)
+    assert "60,000" in source
+    assert "scripts/check_data.py" in source
+    assert "torch" in source and "MODEL" in source
+    assert "stickman_demo.mp4" in source
+    assert "stickman_pipeline_report.json" in source
+    assert "05_quality_loop.ipynb" in source
+    assert "no expert review" in source
 
 
 def test_vector_renderer_draws_connected_neck_and_png(tmp_path):
