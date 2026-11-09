@@ -1,3 +1,21 @@
+<p align="center">
+  <img src="docs/assets/hero.png" alt="Voice2Reel — Arabic and English animated explainers, with actual presenter frames" width="100%">
+</p>
+
+<p align="center">
+  <a href="#quick-start"><strong>Get started</strong></a> ·
+  <a href="#see-it-in-motion"><strong>See it in motion</strong></a> ·
+  <a href="docs/FAST_PRESENTER.md"><strong>الدليل بالعربية</strong></a> ·
+  <a href="#development"><strong>Development</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Language-Arabic%20%2B%20English-23856D" alt="Arabic and English">
+  <img src="https://img.shields.io/badge/Output-Vertical%20MP4-E34D3E" alt="Vertical MP4 output">
+  <img src="https://img.shields.io/badge/Status-Prototype-D9A441" alt="Prototype status">
+</p>
+
 # Voice2Reel
 
 **Create narrated, vertical videos with an animated 2D presenter — in Arabic or English.**
@@ -5,6 +23,18 @@
 Voice2Reel combines a structured script, speech synthesis, character animation, explanatory graphics, music, and sound effects into an MP4. Start with a reviewed script for direct control, or use the optional AI writer to turn an idea into a draft.
 
 The current release is a **local Python prototype** with a command-line workflow and Colab notebooks. It does not include a hosted web application. AI-written scripts need human review before publication.
+
+## See it in motion
+
+<p align="center">
+  <img src="docs/assets/presenter-demo.gif" alt="Animated Arabic presenter moving through thinking, pointing, and thumbs-up scenes with code panels and captions" width="360">
+</p>
+
+<p align="center"><sub>Actual project renderer · 9-second visual preview · silent GIF</sub></p>
+
+The preview shows the renderer's gestures, expressions, captions, and code highlighting. It uses synthetic audio energy and demonstration timing to animate the mouth; it does not demonstrate speech synthesis or word alignment.
+
+![Three scenes rendered by Voice2Reel: the question, explanation, and takeaway](docs/assets/scene-gallery.png)
 
 ## What it does
 
