@@ -9,6 +9,7 @@ import sys
 import time
 from pathlib import Path
 
+from voice2reel.arabic_text import resolve_scene_texts, speech_text
 from voice2reel.common import digest_file, write_json
 from voice2reel.director_model import DIRECTOR_MODEL, DIRECTOR_REVISION, GGUF_REVISION
 from voice2reel.fast_voice import REVISION as VOICE_REVISION
@@ -16,7 +17,7 @@ from voice2reel.voice.model import MODEL_REVISION as XTTS_REVISION
 from voice2reel.presenter_schema import PresenterScript, ReelRequest, parse_script
 from voice2reel.presenter_render import VERSION as RENDER_VERSION, render, validate_audio
 
-PROMPT_VERSION = "presenter-3-natural-arabic"
+PROMPT_VERSION = "presenter-4-mixed-arabic-tts"
 
 
 def signature(value):
@@ -67,7 +68,8 @@ def generate_script(writer, request, trace_path, attempts=1):
         "تجنب عبارات: في عالمنا اليوم، هيا بنا، اكتشف السر، تعزيز الفهم، ضمان تثبيت المعرفة. "
         "لا وعود مضمونة ولا تهويل. لا تكرر المعلومة في المشاهد الثلاثة. "
         "اجعل العناوين عربية قصيرة ومحددة، والنص مناسبًا للكلام بصوت عالٍ. "
-        "ممنوع وضع أي كلمة لاتينية أو اسم كود في الكلام المنطوق؛ استعمل الوصف العربي الصحيح. "
+        "المصطلحات التقنية المعروفة مثل for loop و API مسموحة في النص المعروض مع القراءة العربية لها في الكلام. "
+        "ممنوع معرفات الكود الحرفية المنفردة مثل if أو console داخل الكلام؛ اشرحها بالعربية. "
         "تسميات اللوحات أشياء أو خطوات واضحة من الفكرة، لا صفات مبهمة مثل محدد أو إجباري. "
         "التزم بالحقائق المعطاة، ولا تصف حركة الشخصية في الكلام المنطوق. لا تقرأ كودًا حرفيًا. "
         if language == "ar"
@@ -87,7 +89,8 @@ def generate_script(writer, request, trace_path, attempts=1):
         "the renderer compiles those. Do not generate code. "
         f"Aim for about {max(6, round(request.get('duration', 20) * 1.9 / 3))} spoken words per scene; "
         "write one or two short connected sentences per scene. The duration is a target, not a guarantee. "
-        "Do not put placeholders or technical identifiers in narration."
+        "Registered technical phrases such as 'for loop' are allowed in display narration; "
+        "never output bare code identifiers such as if, for or console."
     )
     base = [
         {"role": "system", "content": instructions},
@@ -147,12 +150,14 @@ def generate_script(writer, request, trace_path, attempts=1):
                         "visual",
                         {"kind": ("flow" if i == 1 else "list") if labels else "none", "items": labels},
                     )
+            # Mixed *display* text is allowed for registered technical terms; the
+            # speech engine only ever sees the Arabic-only ``spoken`` reading.
+            value = resolve_scene_texts(value)
             script = PresenterScript.model_validate(value)
-            if language == "ar":
-                import re
-
-                if any(re.search(r"[A-Za-z]", scene.narration) for scene in script.scenes):
-                    raise ValueError("الكلام المنطوق يجب أن يكون عربيًا كاملًا، بلا أسماء كود أو حروف لاتينية.")
+            if language == "ar" and any(
+                any(c.isascii() and c.isalpha() for c in speech_text(s)) for s in script.scenes
+            ):
+                raise ValueError("الكلام المرسل لمحرك الصوت يجب أن يكون عربيًا كاملًا.")
             if len(script.scenes) != 3:
                 raise ValueError("Exactly 3 scenes required")
             validate_narration_language(
@@ -171,7 +176,8 @@ def generate_script(writer, request, trace_path, attempts=1):
                     "role": "user",
                     "content": (
                         "صحح الأخطاء في الرد السابق. الكلام المنطوق فصحى طبيعية، "
-                        "بجمل سليمة نحويًا. لا تضع أسماء تعليمات إنجليزية في الكلام. "
+                        "بجمل سليمة نحويًا. المصطلحات التقنية المسجلة مسموحة، "
+                        "لكن لا تضع معرفات كود حرفية منفردة في الكلام. "
                         "حافظ على المصطلحات الدقيقة في الحقائق ولا تختصرها اختصارًا يغيّر المعنى. "
                         "أعد JSON المصحح فقط. "
                         if language == "ar"
@@ -259,6 +265,8 @@ def _run(
                     "pipeline_code": digest_file(Path(__file__)),
                     "writer_code": digest_file(Path(__file__).with_name("director_model.py")),
                     "schema_code": digest_file(Path(__file__).with_name("presenter_schema.py")),
+                    "arabic_code": digest_file(Path(__file__).with_name("arabic_text.py")),
+                    "lexicon": digest_file(Path(__file__).parent / "assets" / "arabic_lexicon.json"),
                     "base": DIRECTOR_REVISION,
                     "gguf": GGUF_REVISION,
                     "attempts": text_attempts,
@@ -318,10 +326,12 @@ def _run(
             voice_revision = VOICE_REVISION if voice_engine == "piper" else XTTS_REVISION
         voice_key = signature(
             {
-                "texts": [s.narration for s in script.scenes],
+                "texts": [speech_text(s) for s in script.scenes],
                 "language": script.language,
                 "engine": voice_engine,
                 "voice_code": digest_file(voice_code),
+                "arabic_code": digest_file(Path(__file__).with_name("arabic_text.py")),
+                "lexicon": digest_file(Path(__file__).parent / "assets" / "arabic_lexicon.json"),
                 "revision": voice_revision,
                 "reference": digest_file(reference) if reference else None,
                 "speaker": speaker,
@@ -346,14 +356,14 @@ def _run(
 
                 metadata = FastVoice(script.language, voice_dir, threads).synthesize(script, audio)
             else:
-                words = sum(len(s.narration.split()) for s in script.scenes)
+                words = sum(len(speech_text(s).split()) for s in script.scenes)
                 legacy = {
                     "schema_version": 1,
                     "title": script.title,
                     "language": script.language,
                     "target_duration_seconds": min(60, max(10, round(words / 2))),
                     "beats": [
-                        {"narration": s.narration, "caption": s.caption, "pose": "IDLE", "camera": "medium"}
+                        {"narration": speech_text(s), "caption": s.caption, "pose": "IDLE", "camera": "medium"}
                         for s in script.scenes
                     ],
                 }

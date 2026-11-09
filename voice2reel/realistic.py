@@ -89,10 +89,10 @@ def encode_prompts(prompts):
 
 
 def caption_png(text, destination, width, height, language):
-    from PIL import Image, ImageDraw, ImageFont, features
+    from PIL import Image, ImageDraw, ImageFont
 
-    if not features.check_feature("raqm"):
-        raise RuntimeError("Install a Pillow build with RAQM for Arabic captions")
+    from voice2reel.text_layout import draw_text
+
     direction = "rtl" if language == "ar" else "ltr"
     size = max(14, width // 20)
     while True:
@@ -107,7 +107,7 @@ def caption_png(text, destination, width, height, language):
     y = height * .88 - len(lines) * line_height
     draw.rounded_rectangle((width * .03, y - 12, width * .97, height * .9), radius=8, fill=(0, 0, 0, 175))
     for line in lines:
-        draw.text((width / 2, y), line, font=font, anchor="mt", fill="white", direction=direction)
+        draw_text(draw, (width / 2, y), line, font, direction, anchor="mt", fill="white")
         y += line_height
     image.save(destination)
 

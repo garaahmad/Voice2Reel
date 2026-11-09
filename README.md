@@ -38,7 +38,7 @@ python -m voice2reel.presenter --idea "Explain a programming idea" --interactive
 
 Five questions cover audience, duration, language, facts and visual focus. The pinned Qwen3 4B CPU backend downloads about 2.5 GB once. CUDA uses a suitable Torch build plus `requirements/text.txt`; the Colab notebook configures CPU/GPU dependencies in idea mode. GPU/Colab runtime execution has not been measured here.
 
-Arabic writing targets simple, spoken Modern Standard Arabic, concrete explanation and practical steps. Few-shot examples guide style. Validation rejects Latin identifiers in Arabic narration. A second correction call is allowed only after validation failure; `--text-attempts 1` disables it. These checks do not establish factual or editorial quality. A rejected actual model attempt is retained in [the v2 examples](examples/presenter_v2).
+Arabic writing targets simple, spoken Modern Standard Arabic, concrete explanation and practical steps. Few-shot examples guide style. Registered technical phrases such as `for loop` may appear in display narration and are converted to an Arabic-only reading for the speech engine; bare code identifiers such as `if` or `console` are still rejected. A second correction call is allowed only after validation failure; `--text-attempts 1` disables it. These checks do not establish factual or editorial quality. A rejected actual model attempt is retained in [the v2 examples](examples/presenter_v2).
 
 ## Animation and speed
 
@@ -56,6 +56,20 @@ The [earlier ~10-second CPU benchmark](examples/fast_presenter/benchmark.local.j
 | Original preset XTTS voice | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
 | Original 1.5B QLoRA scriptwriter training | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
 | XTTS cloning/fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
+| Measured v2 quality loop (CPU gate + GPU QLoRA cycles) | [05_quality_loop.ipynb](notebooks/05_quality_loop.ipynb) |
+
+## v2 Arabic, code-switching and motion data
+
+`datasets/` now contains authored synthetic splits for full tashkeel (600 rows), mixed Arabic/English technical terms (760 rows), bounded motion plans (1200 rows), 930/95/95 scriptwriter records, 3240 scene annotations and 140 voice-recording prompts. A 95-term pronunciation lexicon and a motion vocabulary are mirrored into `voice2reel/assets/`. All v2 material is assistant-authored, CC0-1.0, deterministic (`python scripts/build_datasets.py`), and **not expert-reviewed**.
+
+```bash
+python scripts/build_datasets.py            # regenerate byte-identical files
+python scripts/build_datasets.py --check    # verify reproducibility
+python scripts/check_data.py                # validate all splits, leakage, mirrors, manifest
+python -m voice2reel.quality_gate --output examples/quality_v2/rounds.json
+```
+
+`voice2reel/quality_gate.py` fits three small front-end models on CPU (diacritizer, code-switch reader, comfort classifier) and measures them on held-out splits; the Qwen scriptwriter is trained separately on the user's Colab GPU in notebook 05. The measured CPU front-end score is documented in [quality_v2/rounds.json](examples/quality_v2/rounds.json) and [QUALITY_V2.md](docs/QUALITY_V2.md). It is **not** a 90% claim about factual accuracy, voice naturalness, subjective video quality, or the production Qwen3-4B writer.
 
 For cloning, install `requirements/voice.txt` and select `--voice-engine xtts --reference voice.wav`. It is slower. Older 1.5B adapters are incompatible with the Qwen3 4B writer; no new trained weights are shipped.
 

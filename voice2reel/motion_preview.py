@@ -8,6 +8,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 from voice2reel.render import find_font
+from voice2reel.text_layout import draw_text
 
 
 def ease(x):
@@ -160,9 +161,9 @@ class MotionStudy:
                                 resample=Image.Resampling.BICUBIC)
         d = ImageDraw.Draw(image)
         d.text((270, 81), 'Voice2Reel', font=self.small, fill=self.teal, anchor='mt')
-        d.text((270, 125), 'حركة تحكي الفكرة', font=self.font, fill=self.ink, anchor='mt', direction='rtl')
+        draw_text(d, (270, 125), 'حركة تحكي الفكرة', self.font, 'rtl', fill=self.ink, anchor='mt')
         captions = 'خطوة، ثم فكرة' if t < 2.6 else 'لمسة لها أثر' if t < 4.8 else 'ردّة فعل، وشخصية'
-        d.text((270, 841), captions, font=self.font, fill=self.ink, anchor='mt', direction='rtl')
+        draw_text(d, (270, 841), captions, self.font, 'rtl', fill=self.ink, anchor='mt')
         if self.width != 540:
             image = image.resize((self.width, self.height), Image.Resampling.LANCZOS)
         return image

@@ -7,9 +7,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont, features
+from PIL import Image, ImageDraw, ImageFont
 
 from voice2reel.scriptwriter.schema import Script
+from voice2reel.text_layout import draw_text, text_length
 
 
 def validate_timeline(script, metadata):
@@ -52,7 +53,7 @@ def wrap_text(text, font, width, direction):
     lines, current = [], ""
     for word in text.split():
         candidate = (current + " " + word).strip()
-        if current and font.getlength(candidate, direction=direction) > width:
+        if current and text_length(candidate, font, direction) > width:
             lines.append(current)
             current = word
         else:
@@ -66,8 +67,6 @@ class StickmanRenderer:
     """Fixed visual vocabulary; all displayed story content comes from the script."""
 
     def __init__(self, script, segments, font_path, width=1080, height=1920, symbol=";"):
-        if not features.check_feature("raqm"):
-            raise RuntimeError("Pillow needs RAQM support to render Arabic correctly")
         self.script, self.segments = script, segments
         self.width, self.height = width, height
         self.scale = width / 1080
@@ -98,7 +97,7 @@ class StickmanRenderer:
 
     def centered(self, draw, text, y, font, fill, max_width=900):
         for line in wrap_text(text, font, max_width * self.scale, self.direction):
-            draw.text(self.pt(540, y), line, font=font, fill=fill, anchor="mt", direction=self.direction)
+            draw_text(draw, self.pt(540, y), line, font, self.direction, fill=fill, anchor="mt")
             y += font.size / self.scale * 1.65
         return y
 

@@ -1,0 +1,578 @@
+{
+  "license": "CC0-1.0",
+  "policy": "Display text may contain registered Latin technical terms. Speech engines receive the Arabic reading only. Bare code identifiers stay forbidden in narration.",
+  "provenance": "assistant-authored; CC0; not expert-reviewed",
+  "terms": {
+    "API": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "واجهة برمجية",
+      "spoken": "إيه بي آي"
+    },
+    "C#": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "لغة برمجة",
+      "spoken": "سي شارب"
+    },
+    "C++": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "لغة برمجة",
+      "spoken": "سي بلس بلس"
+    },
+    "CDN": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "شبكة توزيع المحتوى",
+      "spoken": "سي دي إن"
+    },
+    "CPU": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "وحدة المعالجة",
+      "spoken": "سي بي يو"
+    },
+    "CSS": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "لغة تنسيق الصفحة",
+      "spoken": "سي إس إس"
+    },
+    "DOM": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "شجرة عناصر الصفحة",
+      "spoken": "دي أو إم"
+    },
+    "GPU": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "وحدة الرسوم والمصفوفات",
+      "spoken": "جي بي يو"
+    },
+    "HTML": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "لغة هيكل الصفحة",
+      "spoken": "إتش تي إم إل"
+    },
+    "HTTP": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "بروتوكول نقل الويب",
+      "spoken": "إتش تي تي بي"
+    },
+    "JSON": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "صيغة تبادل بيانات",
+      "spoken": "جيسون"
+    },
+    "JavaScript": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "لغة برمجة للويب",
+      "spoken": "جافاسكربت"
+    },
+    "LoRA": {
+      "allowed_in_narration": true,
+      "category": "models",
+      "gloss_ar": "تخصيص خفيف للنموذج",
+      "spoken": "لورا"
+    },
+    "NoSQL": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "قاعدة بيانات غير علائقية",
+      "spoken": "نو إس كيو إل"
+    },
+    "Node.js": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "بيئة تشغيل جافاسكربت",
+      "spoken": "نود جي إس"
+    },
+    "Python": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "لغة برمجة",
+      "spoken": "بايثون"
+    },
+    "Qwen3": {
+      "allowed_in_narration": true,
+      "category": "models",
+      "gloss_ar": "نموذج لغوي",
+      "spoken": "كوين ثري"
+    },
+    "REST API": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "واجهة ويب بقواعد محددة",
+      "spoken": "واجهة ريست"
+    },
+    "SQL": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "لغة الاستعلام البنيوية",
+      "spoken": "إس كيو إل"
+    },
+    "TypeScript": {
+      "allowed_in_narration": true,
+      "category": "languages",
+      "gloss_ar": "لغة بأنواع فوق جافاسكربت",
+      "spoken": "تايب سكربت"
+    },
+    "UI": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "واجهة المستخدم",
+      "spoken": "يو آي"
+    },
+    "URL": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "عنوان الصفحة",
+      "spoken": "يوا آر إل"
+    },
+    "UX": {
+      "allowed_in_narration": true,
+      "category": "web",
+      "gloss_ar": "تجربة المستخدم",
+      "spoken": "يو إكس"
+    },
+    "argument": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "القيمة الممررة",
+      "spoken": "الوسيط"
+    },
+    "array": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "قائمة عناصر مرتّبة",
+      "spoken": "المصفوفة"
+    },
+    "boolean": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "صح أو خطأ",
+      "spoken": "القيمة المنطقية"
+    },
+    "branch": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "مسار تطوير منفصل",
+      "spoken": "الفرع"
+    },
+    "break point": {
+      "allowed_in_narration": true,
+      "category": "debugging",
+      "gloss_ar": "إيقاف مؤقت للتنفيذ",
+      "spoken": "نقطة توقف"
+    },
+    "browser": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "برنامج عرض الصفحات",
+      "spoken": "المتصفح"
+    },
+    "bug": {
+      "allowed_in_narration": true,
+      "category": "errors",
+      "gloss_ar": "سلوك غير متوقع",
+      "spoken": "الخلل"
+    },
+    "cache": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "نسخة محفوظة للوصول السريع",
+      "spoken": "الذاكرة المؤقتة"
+    },
+    "class": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "قالب لكائن",
+      "spoken": "الصنف"
+    },
+    "client": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "جهاز يطلب الخدمة",
+      "spoken": "العميل"
+    },
+    "commit": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "حفظ تغيير موثق",
+      "spoken": "الإيداع"
+    },
+    "compiler": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "يحول الكود إلى تعليمات",
+      "spoken": "المترجم"
+    },
+    "console": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "constant": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "قيمة لا تتغير",
+      "spoken": "الثابت"
+    },
+    "database": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "مكان حفظ البيانات",
+      "spoken": "قاعدة البيانات"
+    },
+    "dataset": {
+      "allowed_in_narration": true,
+      "category": "models",
+      "gloss_ar": "أمثلة للتدريب",
+      "spoken": "مجموعة البيانات"
+    },
+    "debug": {
+      "allowed_in_narration": true,
+      "category": "errors",
+      "gloss_ar": "البحث عن سبب الخلل",
+      "spoken": "تصحيح الأخطاء"
+    },
+    "deploy": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "إطلاق التطبيق للمستخدمين",
+      "spoken": "النشر"
+    },
+    "dictionary": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "أزواج مفتاح وقيمة",
+      "spoken": "القاموس"
+    },
+    "edge case": {
+      "allowed_in_narration": true,
+      "category": "testing",
+      "gloss_ar": "حالة على الطرف",
+      "spoken": "حالة حدية"
+    },
+    "editor": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "أداة كتابة الكود",
+      "spoken": "المحرر"
+    },
+    "else": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "else branch": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "الفرع البديل",
+      "spoken": "فرع إلس"
+    },
+    "false": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "float": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "عدد بكسر",
+      "spoken": "العدد العشري"
+    },
+    "for": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "for each": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "تمرين على كل عنصر",
+      "spoken": "فور إيتش"
+    },
+    "for loop": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "حلقة تكرار بعدد معلوم",
+      "spoken": "حلقة فور"
+    },
+    "framework": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "هيكل تنظيمي للتطبيق",
+      "spoken": "إطار العمل"
+    },
+    "function": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "كتلة قابلة للإعادة",
+      "spoken": "الدالة"
+    },
+    "git": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "نظام إدارة الإصدارات",
+      "spoken": "جيت"
+    },
+    "if": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "if statement": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "جملة شرطية",
+      "spoken": "جملة إف"
+    },
+    "index": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "ترتيب يسرّع البحث",
+      "spoken": "الفهرس"
+    },
+    "infinite loop": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "حلقة لا تتوقف",
+      "spoken": "حلقة لا نهائية"
+    },
+    "integer": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "عدد بلا كسر",
+      "spoken": "العدد الصحيح"
+    },
+    "interpreter": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "ينفذ الكود سطرا بسطر",
+      "spoken": "المفسّر"
+    },
+    "let": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "library": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "مجموعة أدوات جاهزة",
+      "spoken": "المكتبة"
+    },
+    "list": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "سلسلة عناصر",
+      "spoken": "القائمة"
+    },
+    "memory": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "مساحة العمل المؤقتة",
+      "spoken": "الذاكرة"
+    },
+    "merge": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "ضم تغييرات الفرع",
+      "spoken": "الدمج"
+    },
+    "method": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "دالة داخل صنف",
+      "spoken": "التابع"
+    },
+    "module": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "ملف برمجي مستقل",
+      "spoken": "الوحدة"
+    },
+    "nested loop": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "حلقة داخل حلقة",
+      "spoken": "حلقة متداخلة"
+    },
+    "null": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "null value": {
+      "allowed_in_narration": true,
+      "category": "errors",
+      "gloss_ar": "غياب قيمة",
+      "spoken": "قيمة فارغة"
+    },
+    "object": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "نسخة من صنف",
+      "spoken": "الكائن"
+    },
+    "package": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "وحدة قابلة للتثبيت",
+      "spoken": "الحزمة"
+    },
+    "parameter": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "قيمة تدخل الدالة",
+      "spoken": "المعامل"
+    },
+    "prompt": {
+      "allowed_in_narration": true,
+      "category": "models",
+      "gloss_ar": "النص الموجه للنموذج",
+      "spoken": "التعليمة"
+    },
+    "query": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "طلب بيانات محدد",
+      "spoken": "الاستعلام"
+    },
+    "return": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "return value": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "نتيجة الدالة",
+      "spoken": "القيمة المرجعة"
+    },
+    "runtime error": {
+      "allowed_in_narration": true,
+      "category": "errors",
+      "gloss_ar": "خطأ يظهر عند التنفيذ",
+      "spoken": "خطأ أثناء التشغيل"
+    },
+    "schema": {
+      "allowed_in_narration": true,
+      "category": "data",
+      "gloss_ar": "وصف بنية البيانات",
+      "spoken": "المخطط"
+    },
+    "semicolon": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "علامة إنهاء الجملة",
+      "spoken": "الفاصلة المنقوطة"
+    },
+    "server": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "جهاز يقدّم الخدمة",
+      "spoken": "الخادم"
+    },
+    "stack trace": {
+      "allowed_in_narration": true,
+      "category": "debugging",
+      "gloss_ar": "سلسلة الاستدعاءات عند الخطأ",
+      "spoken": "تتبع المكدس"
+    },
+    "string": {
+      "allowed_in_narration": true,
+      "category": "data_types",
+      "gloss_ar": "نص محفوظ",
+      "spoken": "السلسلة النصية"
+    },
+    "switch case": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "اختيار بين حالات",
+      "spoken": "سويتش كيس"
+    },
+    "syntax error": {
+      "allowed_in_narration": true,
+      "category": "errors",
+      "gloss_ar": "خطأ يمنع التشغيل",
+      "spoken": "خطأ في الصياغة"
+    },
+    "terminal": {
+      "allowed_in_narration": true,
+      "category": "tools",
+      "gloss_ar": "نافذة الأوامر",
+      "spoken": "الطرفية"
+    },
+    "test case": {
+      "allowed_in_narration": true,
+      "category": "testing",
+      "gloss_ar": "مدخل ونتيجة متوقعة",
+      "spoken": "حالة اختبار"
+    },
+    "thread": {
+      "allowed_in_narration": true,
+      "category": "infra",
+      "gloss_ar": "مسار تنفيذ داخل عملية",
+      "spoken": "الخيط"
+    },
+    "token": {
+      "allowed_in_narration": true,
+      "category": "models",
+      "gloss_ar": "وحدة نص للنموذج",
+      "spoken": "الرمز"
+    },
+    "true": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "unit test": {
+      "allowed_in_narration": true,
+      "category": "testing",
+      "gloss_ar": "اختبار جزء صغير",
+      "spoken": "اختبار وحدة"
+    },
+    "var": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "variable": {
+      "allowed_in_narration": true,
+      "category": "basics",
+      "gloss_ar": "اسم يحمل قيمة",
+      "spoken": "المتغير"
+    },
+    "while": {
+      "allowed_in_narration": false,
+      "category": "literal_code_identifier",
+      "gloss_ar": "معرّف كود حرفي: اشرحه بالعربية ولا تقرأه حرفيا",
+      "spoken": ""
+    },
+    "while loop": {
+      "allowed_in_narration": true,
+      "category": "control_flow",
+      "gloss_ar": "حلقة تكرار بشرط",
+      "spoken": "حلقة وايل"
+    }
+  },
+  "version": "ar-tech-lexicon-v2"
+}

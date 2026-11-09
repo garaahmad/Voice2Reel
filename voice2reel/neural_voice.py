@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
+from voice2reel.arabic_text import speech_text
 from voice2reel.common import write_json
 
 VERSION = "edge-tts-7.3.1-v1"
@@ -83,7 +84,7 @@ class NeuralVoice:
                     samples = samples[:keep]
                 return samples, words
 
-        tasks = [scene(i, s.narration) for i, s in enumerate(script.scenes)]
+        tasks = [scene(i, speech_text(s)) for i, s in enumerate(script.scenes)]
         return await asyncio.wait_for(asyncio.gather(*tasks), timeout=90)
 
     def synthesize(self, script, output):
@@ -117,7 +118,7 @@ class NeuralVoice:
                 arrays.extend([samples, gap])
                 end = cursor + len(samples) + len(gap)
                 segments.append(
-                    {"text": scene.narration, "start": cursor / 24000, "end": end / 24000, "words": words}
+                    {"text": speech_text(scene), "start": cursor / 24000, "end": end / 24000, "words": words}
                 )
                 cursor = end
             samples = np.concatenate(arrays)

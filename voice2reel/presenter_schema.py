@@ -2,9 +2,14 @@
 
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, StringConstraints, model_validator
 
+from voice2reel.arabic_text import resolve_scene_texts
 from voice2reel.scriptwriter.schema import Script, ShortText, StrictModel, Text
+
+# Display narration may contain registered technical Latin terms or full tashkeel.
+# ``spoken`` is the Arabic-only text actually sent to the speech engine.
+SpokenText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=600)]
 
 
 class Visual(StrictModel):
@@ -17,6 +22,7 @@ class Visual(StrictModel):
 
 class Scene(StrictModel):
     narration: Text
+    spoken: SpokenText = ""
     caption: ShortText
     gesture: Literal["present", "point", "think", "shrug", "thumbs_up", "wave"] = "present"
     emotion: Literal["neutral", "happy", "surprised", "concerned", "thinking"] = "neutral"
@@ -58,7 +64,9 @@ def parse_script(value):
                 for b in value["beats"]
             ],
         }
-    return PresenterScript.model_validate(value)
+    # Compact/user scripts may contain registered technical terms in display text.
+    # Fill the TTS-safe Arabic reading and reject unregistered code identifiers.
+    return PresenterScript.model_validate(resolve_scene_texts(value))
 
 
 class ReelRequest(StrictModel):

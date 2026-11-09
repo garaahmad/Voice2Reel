@@ -18,11 +18,16 @@ def main():
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--max-steps", type=int, default=-1)
     p.add_argument("--max-length", type=int, default=2048)
+    p.add_argument("--train-limit", type=int, default=0,
+                   help="Use only the first N train rows (0 = all); documents data-volume cycles")
     p.add_argument("--resume", help="Full checkpoint directory, including optimizer state")
     args = p.parse_args()
     if args.epochs < 1 or args.max_length < 64 or args.max_steps == 0 or args.max_steps < -1:
         p.error("epochs >= 1, max-length >= 64, max-steps must be -1 or positive")
+    if args.train_limit < 0:
+        p.error("train-limit must be 0 or positive")
     train, validation = load_records(args.train), load_records(args.validation)
+    train = train[: args.train_limit] if args.train_limit else train
     validate_splits(train, validation)
     import torch
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
@@ -78,6 +83,7 @@ def main():
         "revision": MODEL_REVISION,
         "seed": 42,
         "train_sha256": digest_file(args.train),
+        "train_rows": len(train),
         "validation_sha256": digest_file(args.validation),
         "args": vars(args),
         "gpu": torch.cuda.get_device_name(0),
@@ -86,7 +92,7 @@ def main():
         import json
 
         previous = json.loads((output / "run.json").read_text())
-        for key in ("base_model", "revision", "train_sha256", "validation_sha256"):
+        for key in ("base_model", "revision", "train_sha256", "train_rows", "validation_sha256"):
             if previous[key] != metadata[key]:
                 raise ValueError(f"Cannot resume: {key} changed")
     write_json(output / "run.json", metadata)

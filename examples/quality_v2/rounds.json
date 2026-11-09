@@ -1,0 +1,143 @@
+{
+  "target": 0.9,
+  "rounds": [
+    {
+      "split": "validation",
+      "tashkeel": {
+        "word_accuracy": 0.9794,
+        "sentence_accuracy": 0.9833,
+        "mark_accuracy": 0.9921
+      },
+      "codeswitch": {
+        "exact_rate": 1.0,
+        "latin_free_rate": 1.0,
+        "term_coverage": 1.0
+      },
+      "motion": {
+        "classifier_accuracy": 0.6667,
+        "rule_comfort_rate": 0.525,
+        "mean_comfort_score": 0.9525
+      },
+      "score": 0.8392,
+      "round": 1,
+      "train_rows": {
+        "tashkeel": 240,
+        "codeswitch": 200,
+        "motion": 240
+      }
+    },
+    {
+      "split": "validation",
+      "tashkeel": {
+        "word_accuracy": 0.9794,
+        "sentence_accuracy": 0.9833,
+        "mark_accuracy": 0.9921
+      },
+      "codeswitch": {
+        "exact_rate": 1.0,
+        "latin_free_rate": 1.0,
+        "term_coverage": 1.0
+      },
+      "motion": {
+        "classifier_accuracy": 0.75,
+        "rule_comfort_rate": 0.525,
+        "mean_comfort_score": 0.9525
+      },
+      "score": 0.8601,
+      "round": 2,
+      "train_rows": {
+        "tashkeel": 480,
+        "codeswitch": 400,
+        "motion": 480
+      }
+    },
+    {
+      "split": "validation",
+      "tashkeel": {
+        "word_accuracy": 0.9794,
+        "sentence_accuracy": 0.9833,
+        "mark_accuracy": 0.9921
+      },
+      "codeswitch": {
+        "exact_rate": 1.0,
+        "latin_free_rate": 1.0,
+        "term_coverage": 1.0
+      },
+      "motion": {
+        "classifier_accuracy": 1.0,
+        "rule_comfort_rate": 0.525,
+        "mean_comfort_score": 0.9525
+      },
+      "score": 0.9226,
+      "round": 3,
+      "train_rows": {
+        "tashkeel": 480,
+        "codeswitch": 620,
+        "motion": 960
+      }
+    }
+  ],
+  "best_round": 3,
+  "final_test_on_best_round": {
+    "split": "test",
+    "tashkeel": {
+      "word_accuracy": 1.0,
+      "sentence_accuracy": 1.0,
+      "mark_accuracy": 1.0
+    },
+    "codeswitch": {
+      "exact_rate": 1.0,
+      "latin_free_rate": 1.0,
+      "term_coverage": 1.0
+    },
+    "motion": {
+      "classifier_accuracy": 0.9917,
+      "rule_comfort_rate": 0.4833,
+      "mean_comfort_score": 0.9483
+    },
+    "score": 0.9204
+  },
+  "integrity": {
+    "tashkeel_mark_classes": 9,
+    "tashkeel_mean_vowelized_ratio": 0.593,
+    "tashkeel_plain_matches": true,
+    "tashkeel_unique_ids": true,
+    "tashkeel_counts": {
+      "train": 480,
+      "validation": 60,
+      "test": 60
+    },
+    "tashkeel_unique_texts": true,
+    "codeswitch_unique_ids": true,
+    "codeswitch_counts": {
+      "train": 620,
+      "validation": 70,
+      "test": 70
+    },
+    "codeswitch_unique_texts": true,
+    "motion_plans_unique_ids": true,
+    "motion_plans_counts": {
+      "train": 960,
+      "validation": 120,
+      "test": 120
+    },
+    "scripts_no_leakage_train_validation": true,
+    "scripts_no_leakage_train_test": true,
+    "scripts_no_leakage_validation_test": true,
+    "script_counts": {
+      "train": 930,
+      "validation": 95,
+      "test": 95
+    },
+    "voice_manifest_matches": true,
+    "voice_prompt_count": 140,
+    "lexicon_terms": 95,
+    "lexicon_forbids_bare_identifiers": true,
+    "motion_annotations": 3240,
+    "motion_annotations_comfortable": true,
+    "build_manifest_script_counts": true,
+    "build_manifest_counts": true,
+    "asset_mirrors": true
+  },
+  "note": "Measured on authored synthetic splits. Front-end models are fitted on CPU; the Qwen writer is trained separately on Colab GPU. This score is NOT a claim about factual accuracy, voice naturalness or subjective video quality."
+}
