@@ -1,64 +1,211 @@
+<p align="center">
+  <img src="docs/assets/hero.png" alt="Voice2Reel — Arabic and English animated explainers, with actual presenter frames" width="100%">
+</p>
+
+<p align="center">
+  <a href="#quick-start"><strong>Get started</strong></a> ·
+  <a href="#see-it-in-motion"><strong>See it in motion</strong></a> ·
+  <a href="docs/FAST_PRESENTER.md"><strong>الدليل بالعربية</strong></a> ·
+  <a href="#development"><strong>Development</strong></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white" alt="Python 3.12">
+  <img src="https://img.shields.io/badge/Language-Arabic%20%2B%20English-23856D" alt="Arabic and English">
+  <img src="https://img.shields.io/badge/Output-Vertical%20MP4-E34D3E" alt="Vertical MP4 output">
+  <img src="https://img.shields.io/badge/Status-Prototype-D9A441" alt="Prototype status">
+</p>
+
 # Voice2Reel
 
-Turn a written idea or reviewed script into a voiced **2D cartoon-presenter reel**, with expressive faces, gestures, explanatory graphics, Arabic/English narration, background music and transition effects.
+**Create narrated, vertical videos with an animated 2D presenter — in Arabic or English.**
 
-**Local prototype:** code generates the full MP4. There is no hosted web app yet. The previous presenter design, Arabic writing and Piper voice were rejected by the user; [presenter v2](docs/PRESENTER_V2.md) redraws the character, changes the default voice, adds sound design and strengthens writing checks. The new design still needs the user's evaluation. AI writing needs editorial review.
+Voice2Reel combines a structured script, speech synthesis, character animation, explanatory graphics, music, and sound effects into an MP4. Start with a reviewed script for direct control, or use the optional AI writer to turn an idea into a draft.
 
-## Try the new version
+The current release is a **local Python prototype** with a command-line workflow and Colab notebooks. It does not include a hosted web application. AI-written scripts need human review before publication.
 
-Open **[04_fast_stickman.ipynb](notebooks/04_fast_stickman.ipynb)** on Colab, or follow the [Arabic instructions](docs/FAST_PRESENTER.md).
+## See it in motion
+
+<p align="center">
+  <img src="docs/assets/presenter-demo.gif" alt="Animated Arabic presenter moving through thinking, pointing, and thumbs-up scenes with code panels and captions" width="360">
+</p>
+
+<p align="center"><sub>Actual project renderer · 9-second visual preview · silent GIF</sub></p>
+
+The preview shows the renderer's gestures, expressions, captions, and code highlighting. It uses synthetic audio energy and demonstration timing to animate the mouth; it does not demonstrate speech synthesis or word alignment.
+
+![Three scenes rendered by Voice2Reel: the question, explanation, and takeaway](docs/assets/scene-gallery.png)
+
+## What it does
+
+- **Arabic and English narration:** online neural speech by default, with optional Piper speech and XTTS voice cloning.
+- **Animated presenter:** expressive faces, six gestures, camera framing, and audio-driven mouth movement.
+- **Explanatory visuals:** captions, diagrams, labels, and code panels with explicit highlighting.
+- **Sound design:** generated instrumental background music, timed effects, and music ducking during speech.
+- **Editable output:** separate narration, music, effects, timing metadata, and the final video.
+- **Incremental rendering:** independent caches for scripts, speech, mixing, and video reduce repeated work when you edit a project.
+
+| Output profile | Resolution | Frame rate |
+| --- | --- | --- |
+| `fast` (default) | 540 × 960 | 24 FPS |
+| `quality` | 720 × 1280 | 30 FPS |
+
+## Quick start
+
+### Run locally
+
+Use **Python 3.12 on Linux**, with FFmpeg and DejaVu Sans Mono installed. The repository also bundles the Cairo font and its SIL Open Font License.
+
+On Ubuntu/Debian, install the system dependencies:
 
 ```bash
-# Python 3.12 on Linux; ffmpeg and DejaVu Sans Mono must be installed.
+sudo apt-get update
+sudo apt-get install -y ffmpeg fonts-dejavu-core
+```
+
+Then install the presenter in a virtual environment:
+
+```bash
+git clone https://github.com/garaahmad/Voice2Reel.git
+cd Voice2Reel
+python3.12 -m venv .venv
+source .venv/bin/activate
 python -m pip install -r requirements/presenter.txt
-python -m voice2reel.presenter --script examples/presenter_v2/semicolon_ar.json --output outputs/presenter
+
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --output outputs/presenter
 ```
 
-This example uses a **manually reviewed Arabic script**. It is not presented as raw model output. It needs no GPU, Torch or text-model download. The bundled Cairo font includes its SIL Open Font License.
+The example uses a **manually reviewed Arabic script**. It requires no GPU, Torch, text-model download, or reference recording. Internet access is required for the default speech service.
 
-The default `edge` voice uses **Microsoft Edge's online neural speech service** through `edge-tts==7.3.1`: Arabic `ar-JO-TaimNeural`, English `en-US-GuyNeural`. Text is sent to that external service; these are not locally trained project weights. Connectivity and service availability are required. No silent voice substitution occurs on failure. For an entirely local voice, select `--voice-engine piper`. Optional XTTS cloning remains available.
+### Run in Colab
+
+Open [04_fast_stickman.ipynb](notebooks/04_fast_stickman.ipynb) in Colab and follow its setup cells. See the [Arabic walkthrough](docs/FAST_PRESENTER.md) for the reviewed-example and idea-generation workflows. Execution on an actual Colab allocation has not been benchmarked here.
+
+## How the pipeline works
+
+```text
+Reviewed script ──────────────────────┐
+                                    ├─→ Speech → Animation + audio mix → MP4
+Idea → Optional AI writer → Review ──┘
+```
+
+The character is drawn by the Python renderer. The optional Qwen3 4B writer generates script text; it does not generate the character artwork.
+
+A script defines narration, captions, gestures, camera framing, and explanatory visuals for each scene. See the [Arabic example](examples/presenter_v2/semicolon_ar.json) for the structure and the [presenter guide](docs/PRESENTER_V2.md) for visual fields and sound settings.
+
+The output directory includes:
+
+| File | Contents |
+| --- | --- |
+| `script.json` | The script used for the video |
+| `narration.wav` | Raw speech used to drive mouth movement |
+| `music.wav` / `effects.wav` | Separate background music and effects |
+| `soundtrack.wav` / `soundtrack.json` | Final audio mix and mix metadata |
+| `video.mp4` | Rendered vertical video |
+| `progress.json` | Pipeline status, including failures |
+
+Timing metadata and performance reports are also saved. Visual edits can reuse unchanged speech; music edits rebuild the mix and video. An identical request can reuse the cached video. Avoid running two jobs against the same output directory.
+
+## Choose a voice
+
+| Engine | Use | Requirements |
+| --- | --- | --- |
+| `edge` (default) | Online neural narration | Internet access to Microsoft's speech service |
+| `piper` | Local preset narration | Initial voice-model download; local inference afterward |
+| `xtts` | Optional reference-voice cloning | Additional dependencies, model downloads, and a reference recording |
+
+The default engine uses `edge-tts==7.3.1` with `ar-JO-TaimNeural` for Arabic and `en-US-GuyNeural` for English. **Narration text is sent to Microsoft's external service.** These voices are not project-trained weights. The client is unofficial, service availability can vary, and the pipeline reports failure without automatically switching engines.
 
 ```bash
-# Original instrumental music and timed transition effects are enabled by default.
-python -m voice2reel.presenter --script script.json --no-music --no-sfx --output outputs/quiet
-python -m voice2reel.presenter --script script.json --music permitted-track.mp3 --output outputs/custom
-python -m voice2reel.presenter --script script.json --speech-rate 5 --output outputs/faster-speech
-# Offline preset speech
-python -m voice2reel.presenter --script script.json --voice-engine piper --output outputs/offline
+# Local Piper speech after the initial model download
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --voice-engine piper --output outputs/piper
+
+# Adjust online speech speed
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --speech-rate 5 --output outputs/faster
 ```
 
-Outputs include `script.json`, raw narration and segment/word timings, separate music/effects stems, `soundtrack.wav`, `video.mp4`, progress and performance reports. Speech drives the mouth independently of music. Music ducks during speech; the mix normalizes speech and controls peak levels.
+For XTTS, install `requirements/voice.txt` in addition to the presenter dependencies and select `--voice-engine xtts --reference voice.wav`. This path has additional compute and model requirements.
 
-## Start from a written idea
+## Customize the video
 
 ```bash
-CC=gcc CXX=g++ CMAKE_ARGS="-DGGML_CUDA=OFF -DLLAMA_CURL=OFF" CMAKE_BUILD_PARALLEL_LEVEL=2 python -m pip install --no-binary llama-cpp-python -r requirements/director-cpu.txt
-python -m voice2reel.presenter --idea "Explain a programming idea" --interactive --device cpu --output outputs/my-reel
+# Higher-resolution output
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --profile quality --output outputs/quality
+
+# Disable music and sound effects
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --no-music --no-sfx --output outputs/quiet
+
+# Supply a music file you have permission to use
+python -m voice2reel.presenter \
+  --script examples/presenter_v2/semicolon_ar.json \
+  --music music.mp3 --output outputs/custom
 ```
 
-Five questions cover audience, duration, language, facts and visual focus. The pinned Qwen3 4B CPU backend downloads about 2.5 GB once. CUDA uses a suitable Torch build plus `requirements/text.txt`; the Colab notebook configures CPU/GPU dependencies in idea mode. GPU/Colab runtime execution has not been measured here.
+Run `python -m voice2reel.presenter --help` for all options.
+
+## Generate a script from an idea
+
+Idea mode adds a text model to the presenter workflow. For the CPU backend, install a C/C++ build toolchain and CMake, then run:
+
+```bash
+CC=gcc CXX=g++ \
+CMAKE_ARGS="-DGGML_CUDA=OFF -DLLAMA_CURL=OFF" \
+CMAKE_BUILD_PARALLEL_LEVEL=2 \
+python -m pip install --no-binary llama-cpp-python -r requirements/director-cpu.txt
+
+python -m voice2reel.presenter \
+  --idea "Explain a programming idea" \
+  --interactive --device cpu --output outputs/my-reel
+```
+
+Five questions capture the audience, duration, language, facts, and visual focus. The pinned Qwen3 4B CPU backend downloads approximately **2.5 GB** on first use. CUDA requires a compatible Torch build and `requirements/text.txt`; the Colab notebook handles the choice of CPU/GPU dependencies in idea mode.
+
+The writer validates structure and language, and may make one correction attempt after validation fails. Use `--text-attempts 1` to disable that retry. These checks do not verify factual accuracy or editorial quality. Review the resulting script before sharing it; the [writing review examples](examples/presenter_v2/writing_review/README.md) document observed limitations.
 
 Arabic writing targets simple, spoken Modern Standard Arabic, concrete explanation and practical steps. Few-shot examples guide style. Registered technical phrases such as `for loop` may appear in display narration and are converted to an Arabic-only reading for the speech engine; bare code identifiers such as `if` or `console` are still rejected. A second correction call is allowed only after validation failure; `--text-attempts 1` disables it. These checks do not establish factual or editorial quality. A rejected actual model attempt is retained in [the v2 examples](examples/presenter_v2).
 
-## Animation and speed
+## Development
 
-Original vector character artwork includes a detailed face/beret, hands/feet, rounded curved limbs, separate shoulders and six gestures. Supersampled character layers, cached faces/text, cropped transforms and independent script/voice/mix/video caches keep rendering on CPU. Visual or music edits preserve speech when its content/settings are unchanged.
+Install the development tools alongside the presenter dependencies:
 
-`fast` outputs 540×960 at 24 FPS; `quality` outputs 720×1280 at 30 FPS. The mouth responds to audio energy, not phoneme alignment. Edge subtitle phrases use provider word boundaries; offline voices retain estimated phrase pacing. Gestures are a finite vocabulary, not arbitrary generated actions. `visual.focus` and `visual.status` allow explicit code emphasis; code is displayed, never executed.
+```bash
+python -m pip install -r requirements/dev.txt
+ruff check .
+python scripts/check_data.py
 
-The [earlier ~10-second CPU benchmark](examples/fast_presenter/benchmark.local.json) applies to the previous simpler renderer and Piper voice. It is not a v2 speed claim. New observations are recorded separately in [v2 examples](examples/presenter_v2). AI writing and correction take additional time; first installs/downloads and online service latency vary. A cache hit reuses a video rather than generating a new story.
+# Presenter, audio, rendering, evaluation, and notebook checks
+pytest -q tests/test_presenter.py tests/test_sound_design.py \
+  tests/test_render.py tests/test_motion_preview.py \
+  tests/test_evaluation.py tests/test_notebooks.py
+```
 
-## Existing training and cloning tools
+Rendering tests use synthetic narration and exercise FFmpeg without calling an online voice service. The full `pytest -q` suite also covers training, XTTS, and experimental video tools; it needs additional dependencies. See the [CI workflow](.github/workflows/tests.yml) for that setup.
 
-| Tool | Entry point |
-|---|---|
-| Current presenter, voice and music | [04_fast_stickman.ipynb](notebooks/04_fast_stickman.ipynb) |
-| Original preset XTTS voice | [00_ready_voice_ar_en.ipynb](notebooks/00_ready_voice_ar_en.ipynb) |
-| Original 1.5B QLoRA scriptwriter training | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
-| XTTS cloning/fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
-| Measured v2 quality loop (CPU gate + GPU QLoRA cycles) | [05_quality_loop.ipynb](notebooks/05_quality_loop.ipynb) |
-| Stickman drawing corpus + CPU/MLP demo pipeline | [06_stickman_generator.ipynb](notebooks/06_stickman_generator.ipynb) |
-| Full Stickman production studio: train once → Qwen content → silent video → voice → mux | [07_stickman_full_production.ipynb](notebooks/07_stickman_full_production.ipynb) |
+## Additional tools
+
+The repository retains training and voice experiments alongside the current presenter:
+
+| Notebook | Purpose |
+| --- | --- |
+| [04_fast_stickman](notebooks/04_fast_stickman.ipynb) | Current presenter, narration, music, and effects |
+| [00_ready_voice_ar_en](notebooks/00_ready_voice_ar_en.ipynb) | Original preset XTTS narration |
+| [01_scriptwriter_qlora](notebooks/01_scriptwriter_qlora.ipynb) | Original 1.5B QLoRA scriptwriter training |
+| [02_arabic_voice_xtts](notebooks/02_arabic_voice_xtts.ipynb) | XTTS cloning and fine-tuning |
+| [05_quality_loop](notebooks/05_quality_loop.ipynb) | Measured v2 quality loop: CPU gate + GPU QLoRA cycles |
+| [06_stickman_generator](notebooks/06_stickman_generator.ipynb) | Stickman drawing corpus + CPU/MLP demo pipeline |
+| [07_stickman_full_production](notebooks/07_stickman_full_production.ipynb) | Full Stickman production studio: train once → Qwen content → silent video → voice → mux |
+
+Older 1.5B adapters are incompatible with the current Qwen3 4B writer. No newly trained weights are shipped. Realistic-video notebook 03 and earlier motion studies are historical experiments, separate from the current presenter workflow.
 
 ## v2 Arabic, code-switching and motion data
 
@@ -87,6 +234,20 @@ python -m voice2reel.stickman_artist --render-samples examples/stickman_drawing/
 
 For the drawing-data/demo path, `notebooks/06_stickman_generator.ipynb` regenerates/validates the 60k corpus, fits the CPU gate, trains a small PyTorch MLP and assembles a deterministic MP4 demo. For the **full production studio**, run `notebooks/07_stickman_full_production.ipynb`: it trains `Qwen2.5-1.5B` LoRA + the Stickman MLP **once**, saves `model_training_results.json` / `نتائج_تدريب_الموديل.json`, then reuses that file to turn a title + idea + source text into a Qwen-generated script, a silent video, scene audio, and a synced final MP4. It requires T4 for the one-off training; later runs reuse the saved file and do **not** retrain. Notebook 05 still measures the production writer and writes the Qwen `final_report.json`.
 
-For cloning, install `requirements/voice.txt` and select `--voice-engine xtts --reference voice.wav`. It is slower. Older 1.5B adapters are incompatible with the Qwen3 4B writer; no new trained weights are shipped.
+## Current limitations
 
-See [research and license notes](docs/RESEARCH.md). Piper runtime/voice data, XTTS and online speech service terms are separate. No Instagram video assets, voice weights or third-party music recordings are redistributed. Realistic-video notebook 03 and earlier motion studies remain historical experiments; reference-video analysis is not an automatic feature of the current pipeline.
+- Mouth animation follows audio energy; it is not phoneme-level lip sync.
+- Gestures come from a fixed vocabulary. The renderer does not generate arbitrary character movements.
+- Code panels display script-provided content and highlights; they do not execute or verify code.
+- AI-generated Arabic can need substantial editing. The reviewed example is not raw model output.
+- Runtime depends on video settings, speech-service latency, model downloads, and cache state. The [earlier CPU benchmark](examples/fast_presenter/benchmark.local.json) measures the previous renderer and Piper voice, not the current version. See [v2 observations](examples/presenter_v2/measurements.json) for separate measurements.
+- GPU execution has not been benchmarked here. Reference-video analysis is not an automatic pipeline feature.
+
+## Documentation and third-party terms
+
+- [Presenter design, audio, and output guide — Arabic](docs/PRESENTER_V2.md)
+- [Colab walkthrough — Arabic](docs/FAST_PRESENTER.md)
+- [Current examples and review notes](examples/presenter_v2/README.md)
+- [Research, sources, and license notes](docs/RESEARCH.md)
+
+Piper, its voice data, XTTS, and the online speech service have separate terms. The bundled Cairo font includes its license. The repository does not redistribute Instagram video assets, voice weights, or third-party music recordings.

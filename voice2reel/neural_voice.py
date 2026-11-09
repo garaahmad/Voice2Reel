@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -13,7 +14,7 @@ import soundfile as sf
 from voice2reel.arabic_text import speech_text
 from voice2reel.common import write_json
 
-VERSION = "edge-tts-7.3.1-v1"
+VERSION = "edge-tts-7.3.1-v2-arabic-terms"
 VOICES = {"ar": "ar-JO-TaimNeural", "en": "en-US-GuyNeural"}
 
 
@@ -45,7 +46,10 @@ class NeuralVoice:
         async def scene(index, text):
             async with semaphore:
                 speech = edge_tts.Communicate(
-                    text,
+                    # Separate the technical name for the Arabic speech engine;
+                    # keep the reviewed source text unchanged in metadata.
+                    re.sub(r"(?<!\w)جافا\s*سكري?بت(?!\w)", "جافا سكريبت", text)
+                    if self.language == "ar" else text,
                     self.voice,
                     rate=f"{self.rate:+d}%",
                     boundary="WordBoundary",

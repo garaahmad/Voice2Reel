@@ -86,3 +86,28 @@ def test_changing_music_reuses_the_narration_and_rebuilds_video(project):  # noq
 def test_missing_custom_music_fails_before_voice_generation(tmp_path):
     with pytest.raises(ValueError, match="existing file"):
         run(tmp_path / "project", script_path=tmp_path / "script.json", music_path=tmp_path / "missing.mp3")
+
+
+def test_arabic_technical_name_is_prepared_for_speech_without_changing_script(tmp_path, monkeypatch):
+    import asyncio
+    import edge_tts
+
+    spoken = []
+
+    class CaptureSpeech:
+        def __init__(self, text, *args, **kwargs):
+            spoken.append(text)
+
+        async def stream(self):
+            if False:
+                yield
+
+    monkeypatch.setattr(edge_tts, "Communicate", CaptureSpeech)
+    script = sample()
+    script.scenes[0].narration = "نتعلم جافاسكربت اليوم، وليست جافا."
+    script.scenes[1].narration = "نراجع جافا سكربت ثم جافاسكريبت."
+    with pytest.raises(ValueError, match="no audio"):
+        asyncio.run(NeuralVoice("ar")._scenes(script, tmp_path))
+    assert spoken[0] == "نتعلم جافا سكريبت اليوم، وليست جافا."
+    assert spoken[1] == "نراجع جافا سكريبت ثم جافا سكريبت."
+    assert script.scenes[0].narration == "نتعلم جافاسكربت اليوم، وليست جافا."
