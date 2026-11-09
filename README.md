@@ -57,6 +57,7 @@ The [earlier ~10-second CPU benchmark](examples/fast_presenter/benchmark.local.j
 | Original 1.5B QLoRA scriptwriter training | [01_scriptwriter_qlora.ipynb](notebooks/01_scriptwriter_qlora.ipynb) |
 | XTTS cloning/fine-tuning | [02_arabic_voice_xtts.ipynb](notebooks/02_arabic_voice_xtts.ipynb) |
 | Measured v2 quality loop (CPU gate + GPU QLoRA cycles) | [05_quality_loop.ipynb](notebooks/05_quality_loop.ipynb) |
+| Large Stickman drawing corpus + CPU measurement loop | [06_stickman_artist.ipynb](notebooks/06_stickman_artist.ipynb) |
 
 ## v2 Arabic, code-switching and motion data
 
@@ -70,6 +71,18 @@ python -m voice2reel.quality_gate --output examples/quality_v2/rounds.json
 ```
 
 `voice2reel/quality_gate.py` fits three small front-end models on CPU (diacritizer, code-switch reader, comfort classifier) and measures them on held-out splits; the Qwen scriptwriter is trained separately on the user's Colab GPU in notebook 05. The measured CPU front-end score is documented in [quality_v2/rounds.json](examples/quality_v2/rounds.json) and [QUALITY_V2.md](docs/QUALITY_V2.md). It is **not** a 90% claim about factual accuracy, voice naturalness, subjective video quality, or the production Qwen3-4B writer.
+
+## Large Stickman drawing corpus
+
+`datasets/stickman/` adds **60,000** deterministic vector drawing plans (50,000/5,000/5,000). Each row stores 18 named 2D joints, 14 numeric features, an actor box, camera/gesture/emotion/intent metadata, and either a professional plan or exactly one of 13 named defects. The corpus teaches two-bone IK, proportions, stroke style, layer order, safe zones, easing and defect detection to the **existing deterministic vector renderer** — it is not a raster/diffusion image dataset. All rows are assistant-authored synthetic CC0-1.0 material with no expert review.
+
+```bash
+python scripts/build_stickman_drawing_data.py --check
+python -m voice2reel.stickman_artist --output examples/stickman_drawing/artist_rounds.json
+python -m voice2reel.stickman_artist --render-samples examples/stickman_drawing/samples
+```
+
+`voice2reel/stickman_artist.py` fits a small CPU ridge model for joint prediction and a learned max-margin defect detector. Three documented rounds reach `0.9304` on validation and `0.9299` on the held-out test split; see [artist_rounds.json](examples/stickman_drawing/artist_rounds.json), [sample frames](examples/stickman_drawing/samples) and [QUALITY_V2.md](docs/QUALITY_V2.md). This is a measured synthetic CPU benchmark, **not** a claim about subjective professional aesthetics, production video quality, or improved `Qwen` weights. Notebook 06 reproduces it on CPU; notebook 05 still needs the user's T4 GPU for the writer.
 
 For cloning, install `requirements/voice.txt` and select `--voice-engine xtts --reference voice.wav`. It is slower. Older 1.5B adapters are incompatible with the Qwen3 4B writer; no new trained weights are shipped.
 

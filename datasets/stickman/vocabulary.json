@@ -1,0 +1,178 @@
+{
+  "camera_zoom": {
+    "close": 1.5,
+    "medium": 1.13,
+    "wide": 1.0
+  },
+  "cameras": [
+    "wide",
+    "medium",
+    "close"
+  ],
+  "captions": [
+    "خطوة واضحة",
+    "ابدأ بمثال",
+    "راجع النتيجة",
+    "قسّم المسألة",
+    "افحص المدخل",
+    "لا تكرر الكود",
+    "اكتب اسما مفهوما",
+    "احفظ نسخة",
+    "قارن الحالتين",
+    "صحح الترتيب",
+    "اختبر جزءا صغيرا",
+    "اقرأ الرسالة",
+    "ثبّت القيمة",
+    "بسّط القرار",
+    "ارسم الفكرة",
+    "الفرق بسيط",
+    "قبل وبعد",
+    "تحقق أولا",
+    "خلاصة المشهد",
+    "نتيجة قابلة للقياس"
+  ],
+  "defects": [
+    "camera_jump",
+    "gesture_flicker",
+    "jitter",
+    "cut_too_fast",
+    "harsh_flash",
+    "overlap",
+    "dense_subtitle",
+    "abrupt_easing",
+    "disconnected_joint",
+    "bad_proportions",
+    "offscreen_actor",
+    "cropped_head",
+    "foot_lift"
+  ],
+  "emotions": [
+    "neutral",
+    "happy",
+    "surprised",
+    "concerned",
+    "thinking"
+  ],
+  "feature_names": [
+    "camera_step",
+    "gesture_switches_per_second",
+    "jitter_amplitude",
+    "scene_seconds",
+    "flash_alpha",
+    "overlap_count",
+    "subtitle_words",
+    "easing_smooth",
+    "proportion_error",
+    "joint_gap",
+    "headline_overlap",
+    "foot_lift",
+    "offscreen",
+    "head_crop"
+  ],
+  "gestures": [
+    "present",
+    "point",
+    "think",
+    "shrug",
+    "thumbs_up",
+    "wave"
+  ],
+  "intents": [
+    "hook",
+    "explain",
+    "close"
+  ],
+  "keypoint_order": [
+    "hip",
+    "shoulder_left",
+    "shoulder_right",
+    "head_center",
+    "head_top",
+    "head_bottom",
+    "neck",
+    "torso_mid",
+    "elbow_left",
+    "elbow_right",
+    "wrist_left",
+    "wrist_right",
+    "knee_left",
+    "knee_right",
+    "ankle_left",
+    "ankle_right",
+    "foot_left",
+    "foot_right"
+  ],
+  "license": "CC0-1.0",
+  "limits": {
+    "max_camera_step_per_scene": 1,
+    "max_flash_alpha": 0.12,
+    "max_gesture_switches_per_second": 0.5,
+    "max_jitter_amplitude": 2.0,
+    "max_subtitle_words": 4,
+    "min_scene_seconds": 2.5
+  },
+  "note": "Structured vector drawing plans for a deterministic renderer; not raster artwork or a diffusion dataset.",
+  "render_order": [
+    "background",
+    "panel",
+    "actor",
+    "headline",
+    "subtitle"
+  ],
+  "safe_zones": {
+    "actor": [
+      24,
+      274,
+      271,
+      836
+    ],
+    "headline": [
+      0,
+      0,
+      540,
+      250
+    ],
+    "panel": [
+      295,
+      430,
+      540,
+      820
+    ],
+    "subtitle": [
+      0,
+      860,
+      540,
+      960
+    ]
+  },
+  "style": {
+    "accent": "#e34d3e",
+    "beret": true,
+    "canvas": [
+      540,
+      960
+    ],
+    "curve_steps": 20,
+    "gloves": true,
+    "head_radius": 72,
+    "ink": "#172023",
+    "lower_arm": 98,
+    "lower_leg": 98,
+    "panel": "#fffef8",
+    "paper": "#f3f2ec",
+    "shadow": true,
+    "shoulder_width": 33,
+    "stroke_width": 14,
+    "supersampling": 2,
+    "upper_arm": 91,
+    "upper_leg": 96
+  },
+  "version": "stickman-drawing-v2",
+  "visuals": [
+    "none",
+    "list",
+    "flow",
+    "compare",
+    "code"
+  ]
+}

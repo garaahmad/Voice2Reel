@@ -9,3 +9,5 @@ python -m voice2reel.quality_gate --output examples/quality_v2/rounds.json
 It is a **real CPU measurement** on the authored synthetic splits, not a hand-written claim. Three documented rounds improved from 0.8392 → 0.8601 → 0.9226 on validation; the best round scored **0.9204** on the final test split. See `docs/QUALITY_V2.md` for the metric definition, limitations, and the separate Colab GPU training loop.
 
 Do not cite this number as production video/writer/voice quality.
+
+For the separate large Stickman drawing corpus and its measured CPU loop, see [stickman_drawing/artist_rounds.json](../stickman_drawing/artist_rounds.json), [sample frames](../stickman_drawing/samples), and `notebooks/06_stickman_artist.ipynb`.

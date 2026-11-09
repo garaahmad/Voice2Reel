@@ -16,6 +16,7 @@
 | Arabic + technical Latin terms | 620 | 70 | 70 | `arabic/codeswitch_*.jsonl` |
 | Motion comfort plans | 960 | 120 | 120 | `motion/motion_plans_*.jsonl` |
 | Scriptwriter records | 930 | 95 | 95 | `scripts/{train,validation,test}.jsonl` |
+| Stickman vector drawing plans | 50,000 | 5,000 | 5,000 | `stickman/drawing_*.jsonl` |
 
 Additional generated assets:
 
@@ -25,6 +26,8 @@ Additional generated assets:
 - `scripts/v2_records.jsonl`: the authored append-only script rows; splits are rebuilt from seed + v2 rows.
 - `voice/recording_prompts_v2.csv`, `voice/manifest.v2.template.jsonl`, `voice/evaluation_texts_v2.txt`: 140 recording prompts, still **without audio**.
 - `build_manifest.json`: seed, counts, provenance and license.
+- `stickman/vocabulary.json` and mirrored `voice2reel/assets/stickman_drawing_vocabulary.json`: 6 gestures, 3 cameras with zoom factors, 5 emotions, 3 intents, 5 visuals, 20 Arabic captions, 13 named defects, 18 keypoints, 14 features, style/limits/safe zones/render order.
+- `stickman/build_manifest.json`: counts, seed, provenance and `CC0-1.0` license for the 60,000 drawing plans.
 
 Design decisions:
 
@@ -33,15 +36,18 @@ Design decisions:
 - Motion examples are balanced 50/50 comfortable/annoying; each negative row violates exactly one named rule. The fitted `ComfortClassifier` learns thresholds from train rows, not hard-coded labels.
 - Splits are disjoint by ID and text; `validate_splits` still checks idea/narration leakage for scriptwriter rows. Extra vocabulary is interleaved across all splits so final test is as hard as validation.
 - Voice prompts are recording scripts, not a recorded corpus. Any real-audio dataset must document source, speaker composition, consent, license and held-out policy before being mixed in.
+- Stickman rows are **structured vector plans**, not raster artwork: 18 2D joints from two-bone IK, per-row proportions/stroke/camera scale, actor safe box, 14 numeric features, and one named defect on negative rows. Professional rows keep the head, neck, torso, arms and feet connected and stay inside authored safe zones. The 13 defects cover camera jumps, gesture flicker, jitter, cuts, flashes, overlap, dense subtitles, abrupt easing, disconnected joints, bad proportions, offscreen actors, cropped heads and lifted feet. This teaches the deterministic renderer and a small CPU defect detector; it is **not** a neural image-generator dataset and has **no expert aesthetic review**.
 
 ## Verification
 
 ```bash
 python scripts/build_datasets.py --check
+python scripts/build_stickman_drawing_data.py --check
 python scripts/check_data.py
 python -m voice2reel.quality_gate --output examples/quality_v2/rounds.json
+python -m voice2reel.stickman_artist --output examples/stickman_drawing/artist_rounds.json
 ```
 
-`scripts/check_data.py` validates script schema, disjoint splits, unique IDs/texts, mark coverage, manifest alignment, asset mirrors and byte reproducibility. `voice2reel/quality_gate.py` fits three front-end models on CPU and reports validation/test metrics; the Qwen scriptwriter is trained on the user's Colab GPU in `notebooks/05_quality_loop.ipynb`. See `docs/QUALITY_V2.md` for the measured numbers and their limits. Artificial tones in unit tests are fixtures only and are never training data.
+`scripts/check_data.py` validates script schema, disjoint splits, unique IDs/texts, mark coverage, manifest alignment, asset mirrors, byte reproducibility for both generators, all 40 Stickman integrity checks, and recomputes the committed CPU measurement report. `voice2reel/quality_gate.py` fits three front-end models on CPU; `voice2reel/stickman_artist.py` fits a joint predictor and a learned defect detector on the 60,000 drawing plans. Both report validation/test metrics. The Qwen scriptwriter is trained on the user's Colab GPU in `notebooks/05_quality_loop.ipynb`; notebook `06_stickman_artist.ipynb` reproduces the CPU drawing loop. See `docs/QUALITY_V2.md` for the measured numbers and their limits. Artificial tones in unit tests are fixtures only and are never training data.
 
 Generated examples and recording prompts in this folder are offered under CC0-1.0: https://creativecommons.org/publicdomain/zero/1.0/. Model and upstream software licenses remain separate.
