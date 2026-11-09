@@ -11,6 +11,8 @@ class Visual(StrictModel):
     kind: Literal["none", "list", "flow", "compare", "code"] = "none"
     items: Annotated[list[ShortText], Field(max_length=4)] = Field(default_factory=list)
     code: Annotated[str, Field(max_length=600)] = ""
+    focus: Annotated[str, Field(max_length=32)] = ""
+    status: Literal["neutral", "warning", "success"] = "neutral"
 
 
 class Scene(StrictModel):

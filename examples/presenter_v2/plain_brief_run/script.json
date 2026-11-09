@@ -1,0 +1,57 @@
+{
+  "title": "الفاصلة المنقوطة بعد الشرط",
+  "language": "ar",
+  "scenes": [
+    {
+      "narration": "إذا وجدت فاصلة منقوطة بعد قوس الشرط، قد تُظهر سلوكًا غير متوقع.",
+      "caption": "ملاحظة خطأ في الترتيب",
+      "gesture": "think",
+      "emotion": "thinking",
+      "camera": "wide",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "الشرط",
+          "الفاصلة"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    },
+    {
+      "narration": "الشرط يُختبر، لكن التمرين التالي يُنفذ في أي حالة، بغض النظر عن النتيجة.",
+      "caption": "الكود يُنفذ بغض النظر",
+      "gesture": "point",
+      "emotion": "concerned",
+      "camera": "wide",
+      "visual": {
+        "kind": "flow",
+        "items": [
+          "الشرط",
+          "الكود المُنفذ"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    },
+    {
+      "narration": "احذف الفاصلة المنقوطة، ثم اختبر الكود في الحالتين: عندما يكون الشرط صحيحًا، وعندما لا يكون.",
+      "caption": "الحل المُختبر",
+      "gesture": "thumbs_up",
+      "emotion": "happy",
+      "camera": "medium",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "الحالة 1",
+          "الحالة 2"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    }
+  ]
+}

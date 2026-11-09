@@ -1,4 +1,4 @@
-"""One text-model pass → local speech → fast 2D presenter MP4, with independent caches."""
+"""One text-model pass → speech and sound design → 2D presenter MP4, with independent caches."""
 
 import argparse
 import gc
@@ -16,7 +16,7 @@ from voice2reel.voice.model import MODEL_REVISION as XTTS_REVISION
 from voice2reel.presenter_schema import PresenterScript, ReelRequest, parse_script
 from voice2reel.presenter_render import VERSION as RENDER_VERSION, render, validate_audio
 
-PROMPT_VERSION = "presenter-2"
+PROMPT_VERSION = "presenter-3-natural-arabic"
 
 
 def signature(value):
@@ -61,7 +61,14 @@ def generate_script(writer, request, trace_path, attempts=1):
 
     language = request["language"]
     instructions = (
-        "اكتب فيديو شرح قصيرًا بالعربية. اجعل العنوان والتعليق والعناوين الفرعية عربية واضحة. "
+        "اكتب تعليقًا لفيديو شرح بالعربية الفصحى البسيطة، بصوت إنسان يشرح لصديقه. "
+        "لا لهجة عامية ولا تعابير مترجمة حرفيًا. ابدأ بمشكلة محددة من الفكرة، ثم اشرح سببها، ثم خطوة عملية. "
+        "جمل قصيرة متصلة المعنى. لا تكتب مقدمة أو ترحيبًا أو دعوة للمتابعة. "
+        "تجنب عبارات: في عالمنا اليوم، هيا بنا، اكتشف السر، تعزيز الفهم، ضمان تثبيت المعرفة. "
+        "لا وعود مضمونة ولا تهويل. لا تكرر المعلومة في المشاهد الثلاثة. "
+        "اجعل العناوين عربية قصيرة ومحددة، والنص مناسبًا للكلام بصوت عالٍ. "
+        "ممنوع وضع أي كلمة لاتينية أو اسم كود في الكلام المنطوق؛ استعمل الوصف العربي الصحيح. "
+        "تسميات اللوحات أشياء أو خطوات واضحة من الفكرة، لا صفات مبهمة مثل محدد أو إجباري. "
         "التزم بالحقائق المعطاة، ولا تصف حركة الشخصية في الكلام المنطوق. لا تقرأ كودًا حرفيًا. "
         if language == "ar"
         else "Write a concise English explainer. Follow the supplied facts; do not invent claims. "
@@ -75,16 +82,48 @@ def generate_script(writer, request, trace_path, attempts=1):
         )
     instructions += (
         "Return one JSON object, with title and exactly 3 scenes. "
-        "Each scene has ONLY narration (one short spoken sentence), caption (short heading), "
+        "Each scene has ONLY narration (one or two short spoken sentences), caption (short heading), "
         "and labels (two short labels for a diagram). Do not write gesture, emotion or camera fields: "
         "the renderer compiles those. Do not generate code. "
-        "Keep narration around 10–14 spoken words per scene, respecting the requested duration. "
+        f"Aim for about {max(6, round(request.get('duration', 20) * 1.9 / 3))} spoken words per scene; "
+        "write one or two short connected sentences per scene. The duration is a target, not a guarantee. "
         "Do not put placeholders or technical identifiers in narration."
     )
     base = [
         {"role": "system", "content": instructions},
         {"role": "user", "content": json.dumps(request, ensure_ascii=False)},
     ]
+    if language == "ar":
+        example_request = {
+            "idea": "الصفحة تعرض نسخة قديمة",
+            "facts": "التخزين المؤقت قد يعرض نسخة محفوظة. جرّب التحديث مع تجاوز الذاكرة المؤقتة.",
+        }
+        example_response = {
+            "title": "لماذا تظهر الصفحة القديمة؟",
+            "scenes": [
+                {
+                    "narration": "حدّثت الصفحة، لكنها ما زالت تعرض النسخة القديمة؟ قد تكون النسخة المحفوظة هي السبب.",
+                    "caption": "لماذا لم تظهر التغييرات؟",
+                    "labels": ["نسخة قديمة", "نسخة جديدة"],
+                },
+                {
+                    "narration": "التخزين المؤقت يحتفظ بنسخة من الصفحة، فيعرضها دون تنزيلها من جديد.",
+                    "caption": "التطبيق يعرض نسخة محفوظة",
+                    "labels": ["حفظ الصفحة", "عرض النسخة"],
+                },
+                {
+                    "narration": "جرّب تحديث الصفحة مع تجاوز النسخة المحفوظة، ثم تحقق من ظهور التغييرات.",
+                    "caption": "حدّث الصفحة وتحقق",
+                    "labels": ["تحديث الصفحة", "فحص النتيجة"],
+                },
+            ],
+        }
+        base = [
+            base[0],
+            {"role": "user", "content": json.dumps(example_request, ensure_ascii=False)},
+            {"role": "assistant", "content": json.dumps(example_response, ensure_ascii=False)},
+            base[1],
+        ]
     messages = base
     trace = []
     for attempt in range(attempts):
@@ -101,14 +140,19 @@ def generate_script(writer, request, trace_path, attempts=1):
                     if not isinstance(scene, dict):
                         raise ValueError("Scenes must be objects")
                     labels = scene.pop("labels", [])
-                    scene.setdefault("gesture", ("shrug", "point", "thumbs_up")[i % 3])
-                    scene.setdefault("emotion", ("surprised", "thinking", "happy")[i % 3])
-                    scene.setdefault("camera", "close" if i == 2 else "wide")
+                    scene.setdefault("gesture", ("think", "point", "thumbs_up")[i % 3])
+                    scene.setdefault("emotion", ("thinking", "concerned", "happy")[i % 3])
+                    scene.setdefault("camera", "medium" if i == 2 else "wide")
                     scene.setdefault(
                         "visual",
                         {"kind": ("flow" if i == 1 else "list") if labels else "none", "items": labels},
                     )
             script = PresenterScript.model_validate(value)
+            if language == "ar":
+                import re
+
+                if any(re.search(r"[A-Za-z]", scene.narration) for scene in script.scenes):
+                    raise ValueError("الكلام المنطوق يجب أن يكون عربيًا كاملًا، بلا أسماء كود أو حروف لاتينية.")
             if len(script.scenes) != 3:
                 raise ValueError("Exactly 3 scenes required")
             validate_narration_language(
@@ -121,7 +165,21 @@ def generate_script(writer, request, trace_path, attempts=1):
         except (ValueError, TypeError) as exc:
             row["error"] = str(exc)
             write_json(trace_path, trace)
-            messages = base + [{"role": "user", "content": "Return corrected JSON only. " + str(exc)[:350]}]
+            messages = base + [
+                {"role": "assistant", "content": raw},
+                {
+                    "role": "user",
+                    "content": (
+                        "صحح الأخطاء في الرد السابق. الكلام المنطوق فصحى طبيعية، "
+                        "بجمل سليمة نحويًا. لا تضع أسماء تعليمات إنجليزية في الكلام. "
+                        "حافظ على المصطلحات الدقيقة في الحقائق ولا تختصرها اختصارًا يغيّر المعنى. "
+                        "أعد JSON المصحح فقط. "
+                        if language == "ar"
+                        else "Correct the previous response. Return JSON only. "
+                    )
+                    + str(exc)[:350],
+                },
+            ]
         else:
             row["json_repaired"] = repaired
             write_json(trace_path, trace)
@@ -138,23 +196,36 @@ def _run(
     gguf_model=None,
     threads=2,
     profile="fast",
-    voice_engine="piper",
+    voice_engine="edge",
     voice_dir="models/piper",
     reference=None,
     speaker=None,
     xtts_base="models/xtts-v2",
-    text_attempts=1,
+    text_attempts=2,
+    neural_voice=None,
+    speech_rate=0,
+    music=True,
+    sfx=True,
+    music_path=None,
 ):
     if profile not in ("fast", "quality") or not 1 <= threads <= 32 or text_attempts not in (1, 2):
         raise ValueError("Choose fast/quality, 1–32 threads, and 1–2 text attempts")
+    if device not in ("auto", "cpu", "cuda"):
+        raise ValueError("Choose auto, cpu or cuda")
+    if not isinstance(speech_rate, int) or not -20 <= speech_rate <= 25:
+        raise ValueError("Speech rate must be between -20 and +25 percent")
     if request is not None:
         request = ReelRequest.model_validate(request).model_dump()
     if reference and speaker:
         raise ValueError("Choose a preset speaker or reference voice, not both")
-    if voice_engine not in ("piper", "xtts"):
-        raise ValueError("Choose piper or xtts")
-    if voice_engine == "piper" and (reference or speaker):
+    if voice_engine not in ("edge", "piper", "xtts"):
+        raise ValueError("Choose edge, piper or xtts")
+    if voice_engine != "xtts" and (reference or speaker):
         raise ValueError("Reference cloning and --speaker require --voice-engine xtts")
+    if voice_engine != "edge" and (neural_voice is not None or speech_rate != 0):
+        raise ValueError("--neural-voice and --speech-rate require --voice-engine edge")
+    if music_path and (not music or not Path(music_path).is_file()):
+        raise ValueError("Custom music must be an existing file with music enabled")
     if (script_path is None) == (request is None):
         raise ValueError("Choose a script or a written idea")
     project = Path(project)
@@ -208,7 +279,7 @@ def _run(
                             "model": writer.model_id,
                             "revision": writer.revision,
                             "backend": writer.backend,
-                            "passes": "one compact storyboard",
+                            "attempts": len(json.loads((project / "script.trace.json").read_text())),
                         },
                     )
                 finally:
@@ -231,17 +302,31 @@ def _run(
         write_json(source, script.model_dump())
         metrics["stages"]["script_seconds"] = time.perf_counter() - stage
         stage = time.perf_counter()
+        if voice_engine == "edge":
+            from voice2reel.neural_voice import NeuralVoice, VERSION as NEURAL_VERSION, validate_settings
+
+            selected_voice = validate_settings(script.language, neural_voice, speech_rate)
+            voice_code = Path(__file__).with_name("neural_voice.py")
+            voice_revision = NEURAL_VERSION
+        else:
+            selected_voice = None
+            voice_code = (
+                Path(__file__).with_name("fast_voice.py")
+                if voice_engine == "piper"
+                else Path(__file__).parent / "voice" / "synthesize.py"
+            )
+            voice_revision = VOICE_REVISION if voice_engine == "piper" else XTTS_REVISION
         voice_key = signature(
             {
                 "texts": [s.narration for s in script.scenes],
                 "language": script.language,
                 "engine": voice_engine,
-                "voice_code": digest_file(Path(__file__).with_name("fast_voice.py"))
-                if voice_engine == "piper"
-                else digest_file(Path(__file__).parent / "voice" / "synthesize.py"),
-                "revision": VOICE_REVISION if voice_engine == "piper" else XTTS_REVISION,
+                "voice_code": digest_file(voice_code),
+                "revision": voice_revision,
                 "reference": digest_file(reference) if reference else None,
                 "speaker": speaker,
+                "neural_voice": selected_voice,
+                "speech_rate": speech_rate,
             }
         )
         if cached(project / "voice.cache.json", voice_key, [audio, timing]):
@@ -249,8 +334,14 @@ def _run(
             validate_audio(script, metadata, audio)
             metrics["cache_hits"]["voice"] = True
         else:
-            status("Generating local AI narration")
-            if voice_engine == "piper":
+            status(
+                "Generating online neural narration"
+                if voice_engine == "edge"
+                else "Generating local AI narration"
+            )
+            if voice_engine == "edge":
+                metadata = NeuralVoice(script.language, selected_voice, speech_rate).synthesize(script, audio)
+            elif voice_engine == "piper":
                 from voice2reel.fast_voice import FastVoice
 
                 metadata = FastVoice(script.language, voice_dir, threads).synthesize(script, audio)
@@ -292,20 +383,49 @@ def _run(
             metrics["cache_hits"]["voice"] = False
         metrics["stages"]["voice_seconds"] = time.perf_counter() - stage
         stage = time.perf_counter()
+        from voice2reel.audio_mix import VERSION as MIX_VERSION, mix_audio
+
+        soundtrack = project / "soundtrack.wav"
+        mix_report = project / "soundtrack.json"
+        mix_key = signature(
+            {
+                "audio": digest_file(audio),
+                "metadata": digest_file(timing),
+                "music": music,
+                "sfx": sfx,
+                "music_file": digest_file(music_path) if music_path else None,
+                "version": MIX_VERSION,
+                "code": digest_file(Path(__file__).with_name("audio_mix.py")),
+            }
+        )
+        if cached(project / "mix.cache.json", mix_key, [soundtrack, mix_report]):
+            metrics["cache_hits"]["mix"] = True
+        else:
+            status("Mixing speech, music and transition effects")
+            metrics["mix"] = mix_audio(
+                audio, metadata, soundtrack, music=music, sfx=sfx, music_path=music_path
+            )
+            manifest(project / "mix.cache.json", mix_key, [soundtrack, mix_report])
+            metrics["cache_hits"]["mix"] = False
+        metrics["stages"]["mix_seconds"] = time.perf_counter() - stage
+        stage = time.perf_counter()
         video_key = signature(
             {
                 "script": script.model_dump(),
                 "audio": digest_file(audio),
+                "soundtrack": digest_file(soundtrack),
+                "timings": digest_file(timing),
                 "profile": profile,
                 "renderer": RENDER_VERSION,
                 "renderer_code": digest_file(Path(__file__).with_name("presenter_render.py")),
+                "font": digest_file(Path(__file__).parent / "assets" / "Cairo.ttf"),
             }
         )
         if cached(project / "video.cache.json", video_key, [output]):
             metrics["cache_hits"]["video"] = True
         else:
             status("Drawing and encoding cartoon scenes")
-            metrics["render"] = render(script, audio, metadata, output, profile)
+            metrics["render"] = render(script, audio, metadata, output, profile, soundtrack_path=soundtrack)
             manifest(project / "video.cache.json", video_key, [output])
             metrics["cache_hits"]["video"] = False
         metrics["stages"]["video_seconds"] = time.perf_counter() - stage
@@ -316,7 +436,11 @@ def _run(
             profile=profile,
             voice_engine=voice_engine,
             synthetic_narration=True,
-            subtitle_timing="estimated phrase pacing",
+            subtitle_timing="provider word boundaries"
+            if metadata.get("word_timing")
+            else "estimated phrase pacing",
+            music=music,
+            transition_effects=sfx,
             mouth_motion="audio energy, not phoneme alignment",
         )
         write_json(project / "metrics.json", metrics)
@@ -370,12 +494,17 @@ def main():
     p.add_argument("--gguf-model")
     p.add_argument("--threads", type=int, default=2)
     p.add_argument("--profile", choices=["fast", "quality"], default="fast")
-    p.add_argument("--voice-engine", choices=["piper", "xtts"], default="piper")
+    p.add_argument("--voice-engine", choices=["edge", "piper", "xtts"], default="edge")
     p.add_argument("--voice-dir", default="models/piper")
+    p.add_argument("--neural-voice", help="Matching locale voice, e.g. ar-JO-TaimNeural")
+    p.add_argument("--speech-rate", type=int, default=0, help="Online speech speed, -20 to +25 percent")
+    p.add_argument("--no-music", action="store_true")
+    p.add_argument("--no-sfx", action="store_true")
+    p.add_argument("--music", dest="music_path", help="Optional music file you are allowed to use")
     p.add_argument("--reference")
     p.add_argument("--speaker")
     p.add_argument("--xtts-base", default="models/xtts-v2")
-    p.add_argument("--text-attempts", type=int, choices=[1, 2], default=1)
+    p.add_argument("--text-attempts", type=int, choices=[1, 2], default=2)
     a = p.parse_args()
     if a.interactive:
         if not a.idea:
@@ -413,6 +542,11 @@ def main():
         speaker=a.speaker,
         xtts_base=a.xtts_base,
         text_attempts=a.text_attempts,
+        neural_voice=a.neural_voice,
+        speech_rate=a.speech_rate,
+        music=not a.no_music,
+        sfx=not a.no_sfx,
+        music_path=a.music_path,
     )
     print(result)
     print(json.dumps(metrics, indent=2))

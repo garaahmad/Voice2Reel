@@ -1,0 +1,98 @@
+{
+  "environment": {
+    "cpu_quota_cores": 2,
+    "cuda": false,
+    "install_downloads_included": false,
+    "concurrent_jobs": "Arabic and English renders overlapped; not an isolated speed benchmark"
+  },
+  "reviewed_arabic_run": {
+    "stages": {
+      "script_seconds": 0.0007029179998880863,
+      "voice_seconds": 1.4376668029999564,
+      "mix_seconds": 0.9390869779999775,
+      "video_seconds": 17.677161237000064
+    },
+    "cache_hits": {
+      "script": false,
+      "voice": false,
+      "mix": false,
+      "video": false
+    },
+    "script_source": "provided",
+    "mix": {
+      "version": "original-score-1",
+      "duration": 27.60975,
+      "music_enabled": true,
+      "effects_enabled": true,
+      "music_source": "original synthesized score",
+      "music_ducking": true,
+      "speech_target_lufs": -17,
+      "output_peak": 0.8113225698471069,
+      "music_rms": 0.014722028747200966,
+      "effects_rms": 0.004195657558739185,
+      "master_gain": 1.0
+    },
+    "render": {
+      "wall_seconds": 17.66845886300007,
+      "fps": 24,
+      "width": 540,
+      "height": 960,
+      "frames": 663
+    },
+    "total_seconds": 20.054982335999966,
+    "video_duration": 27.60975,
+    "target_duration_seconds": null,
+    "profile": "fast",
+    "voice_engine": "edge",
+    "synthetic_narration": true,
+    "subtitle_timing": "provider word boundaries",
+    "music": true,
+    "transition_effects": true,
+    "mouth_motion": "audio energy, not phoneme alignment"
+  },
+  "english_run": {
+    "stages": {
+      "script_seconds": 0.0007666250000966102,
+      "voice_seconds": 2.1207060529998216,
+      "mix_seconds": 0.886146965999842,
+      "video_seconds": 12.48043748300006
+    },
+    "cache_hits": {
+      "script": false,
+      "voice": false,
+      "mix": false,
+      "video": false
+    },
+    "script_source": "provided",
+    "mix": {
+      "version": "original-score-1",
+      "duration": 17.007875,
+      "music_enabled": true,
+      "effects_enabled": true,
+      "music_source": "original synthesized score",
+      "music_ducking": true,
+      "speech_target_lufs": -17,
+      "output_peak": 0.8166567087173462,
+      "music_rms": 0.014328706078231335,
+      "effects_rms": 0.005345720332115889,
+      "master_gain": 1.0
+    },
+    "render": {
+      "wall_seconds": 12.47422702200015,
+      "fps": 24,
+      "width": 540,
+      "height": 960,
+      "frames": 409
+    },
+    "total_seconds": 15.488417860000027,
+    "video_duration": 17.007875,
+    "target_duration_seconds": null,
+    "profile": "fast",
+    "voice_engine": "edge",
+    "synthetic_narration": true,
+    "subtitle_timing": "provider word boundaries",
+    "music": true,
+    "transition_effects": true,
+    "mouth_motion": "audio energy, not phoneme alignment"
+  }
+}

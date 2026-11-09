@@ -1,0 +1,10 @@
+{
+  "accepted_for_publication": false,
+  "reviewer": "manual editorial review",
+  "findings": [
+    "The second attempt removed the Latin code identifier but retained poor Arabic grammar.",
+    "The phrase يحذف الوضع المضمن is unclear and does not faithfully state the requested correction.",
+    "Scene 1 and 2 repeat the same consequence instead of clearly separating problem and mechanism."
+  ],
+  "conclusion": "Schema/language validation passed; editorial quality failed. Do not treat this as a successful writing sample."
+}

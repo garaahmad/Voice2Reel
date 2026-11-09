@@ -1,0 +1,45 @@
+{
+  "stages": {
+    "script_seconds": 66.77525589300012,
+    "voice_seconds": 5.613146015999973,
+    "mix_seconds": 0.8859983039999406,
+    "video_seconds": 9.987419487000125
+  },
+  "cache_hits": {
+    "script": false,
+    "voice": false,
+    "mix": false,
+    "video": false
+  },
+  "script_source": "ai",
+  "mix": {
+    "version": "original-score-1",
+    "duration": 20.146166666666666,
+    "music_enabled": true,
+    "effects_enabled": true,
+    "music_source": "original synthesized score",
+    "music_ducking": true,
+    "speech_target_lufs": -17,
+    "output_peak": 0.8116431832313538,
+    "music_rms": 0.012192457914352417,
+    "effects_rms": 0.004911736585199833,
+    "master_gain": 1.0
+  },
+  "render": {
+    "wall_seconds": 9.980852228000003,
+    "fps": 24,
+    "width": 540,
+    "height": 960,
+    "frames": 484
+  },
+  "total_seconds": 83.26200576999986,
+  "video_duration": 20.146166666666666,
+  "target_duration_seconds": 25,
+  "profile": "fast",
+  "voice_engine": "edge",
+  "synthetic_narration": true,
+  "subtitle_timing": "provider word boundaries",
+  "music": true,
+  "transition_effects": true,
+  "mouth_motion": "audio energy, not phoneme alignment"
+}

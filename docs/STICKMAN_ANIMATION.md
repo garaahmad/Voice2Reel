@@ -1,21 +1,11 @@
-# ستيكمان بأسلوب مقدّم كرتوني
+# Current cartoon presenter
 
-المسار الحالي القابل للتشغيل هو [المقدّم السريع](FAST_PRESENTER.md)، مع [المرجع البصري الذي حدده المستخدم](STICKMAN_REFERENCE.md).
+The user rejected both the earliest minimalist study and the first fast presenter. Current work is **presenter v2**, documented in [PRESENTER_V2.md](PRESENTER_V2.md), with original red-beret artwork, a fuller face and consistent rounded limbs, separate shoulders, hands/feet, and cropped supersampled drawing.
 
-## ما الذي يعمل الآن؟
+Six supported gestures remain `present`, `point`, `think`, `shrug`, `thumbs_up`, `wave`. Face expressions, eye direction, blinks, pose transitions, brief recovery and weight shifts create presenter motion. This is a bounded 2D animation engine; it cannot invent arbitrary actions, interactions or multiple-character scenes.
 
-- شخصية مرسومة برمجيًا بقبعة ووجه متعدد التعابير وكفوف وأقدام، وإيماءات شرح.
-- سكربت مشاهد typed يحدد النص والعنوان والإيماءة والتعبير والكاميرا ولوحة الشرح.
-- توليد النص في طلب AI واحد مختصر؛ يقوم المحرك بترجمة البيانات إلى حركات العرض.
-- توليد صوت عربي/إنجليزي بـPiper، أو XTTS اختياريًا للاستنساخ.
-- مزج وضعيات الشخصية، وحركة عودة وتأكيد، ورمش ونظرات، وفتح فم يستجيب للصوت.
-- لقطات عامة ومتوسطة وقريبة، ولوحات كود وقوائم وتدفق ومقارنة، وترجمة عربية/إنجليزية.
-- إخراج MP4 مع كاش مستقل للمراحل وقياسات زمن فعلية.
+Camera framing changes the actor layer while keeping text readable. Panels support code, lists, flow and comparison. Explicit `visual.focus` plus `visual.status` emphasize an item without inferring code correctness. A brief graphic wipe and timed sound effect accompany cuts. Cairo is bundled for Arabic/Latin/punctuation coverage, with its complete SIL OFL license.
 
-لا تُستعمل أصول الريل داخل الرندر؛ الرسوم جديدة مستوحاة من اتجاهه. لم يقيّم المستخدم التصميم الجديد بعد. المعاينة الأولى المرفوضة `motion_preview` تبقى دراسة تقنية قديمة، وليست المسار الافتراضي.
+Narration audio drives mouth opening; music and effects do not. There is no phoneme lip-sync. Online Edge speech supplies word boundaries for subtitle phrases; Piper/XTTS keep estimated phrase timing. The default online voice, offline alternatives and mix controls are explained in the guide.
 
-## الحدود الحالية
-
-المحرك ذو مفردات تقديم محددة، ولا يولّد شخصيات أو أفعالًا مفتوحة أو مشاهد متعددة الشخصيات. ترتيب الحركة يُحسب برمجيًا؛ ليس هناك نموذج AI يرسم كل فريم. فتح الفم يعتمد على طاقة الصوت، والترجمة على تقدير توزيع العبارات، دون محاذاة فونيمات أو كلمات حقيقية.
-
-المحتوى الذي يكتبه الموديل قد يحتاج تصحيحًا. تشمل الأعمال المتبقية إيماءات ومشاهد أغنى، وتحسين محاذاة الكلام، وتقييم جودة اللغة والنطق، وواجهة ويب/طابور وظائف. راجع دليل المسار السريع للتشغيل والتوقيتات والتراخيص.
+The reviewed Arabic example is manual editorial work. Actual AI attempts are preserved separately and remain evidence of writing limitations. This design has not yet been approved by the user.

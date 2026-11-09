@@ -52,3 +52,14 @@ Voice repository: `rhasspy/piper-voices`, revision `e7229f7d33a10e145e109b886d66
 - [English Lessac medium model card](https://huggingface.co/rhasspy/piper-voices/blob/e7229f7d33a10e145e109b886d661984201ac3c4/en/en_US/lessac/medium/MODEL_CARD): English (US), one speaker, 22,050 Hz; the Lessac Blizzard 2013 data has its own license terms.
 
 Piper's maintained runtime is GPL-3.0. Voice/data rights are separate and require review. No voice weights or Instagram assets are redistributed in this repository. XTTS remains an optional slower cloning backend under its existing CPML constraints.
+
+
+## Presenter v2 speech, typography and sound (2026-11-09)
+
+The user rejected the first presenter/Piper result. The new default uses [edge-tts 7.3.1](https://pypi.org/project/edge-tts/7.3.1/) and the [maintainer's API](https://github.com/rany2/edge-tts). This is an unofficial client to Microsoft's **online** Edge speech service, not a local model upgrade or a project-trained voice. [Microsoft's voice documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts) describes locale-specific neural voices. Client license and service/output terms are separate. Real service generation was tested; long-term availability is not promised.
+
+Word boundary events provide phrase timing for Edge output. No phoneme lip-sync is claimed. Original music and transition effects are synthesized in `audio_mix.py`; no external recordings were copied. Speech normalization, envelope-based music ducking and a final peak constraint keep the voice in front.
+
+[Cairo](https://github.com/google/fonts/tree/main/ofl/cairo) supplies Arabic/Latin/punctuation in a single bundled font under SIL OFL 1.1. The original font and complete license ship with the package; hash/source are documented beside the asset.
+
+The current Qwen3 4B writer remains limited in Arabic style. Actual failed model output is preserved, and script examples are marked as manually reviewed where applicable. Prompt changes, few-shot examples and validation are not presented as model training or proof of high writing quality.

@@ -1,0 +1,57 @@
+{
+  "title": "الشرط ينفذ رغم عدم تحققه",
+  "language": "ar",
+  "scenes": [
+    {
+      "narration": "إذا وُضع فاصلة منقوطة مباشرة بعد قوس الشرط، فإن الكتلة تُنفذ تلقائياً بغض النظر عن نتيجة الشرط.",
+      "caption": "الخطأ في الترتيب",
+      "gesture": "think",
+      "emotion": "thinking",
+      "camera": "wide",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "الشرط",
+          "الكتلة"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    },
+    {
+      "narration": "الفاصلة تفصل بين الشرط والكتلة، فيجعل الكتلة تُنفذ بذاتها، بغض النظر عن ما إذا كان الشرط صحيحًا أم لا.",
+      "caption": "السبب في التنفيذ",
+      "gesture": "point",
+      "emotion": "concerned",
+      "camera": "wide",
+      "visual": {
+        "kind": "flow",
+        "items": [
+          "الشرط غير مرتبط",
+          "الكتلة مستقلة"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    },
+    {
+      "narration": "يُحذف الوضع المُضمن، ويُتأكد أن الكتلة تأتي بعد الشرط، ثم يُجرى اختبار كل حالة من تحقق الشرط أو عدم تحققه.",
+      "caption": "الحل المُقترح",
+      "gesture": "thumbs_up",
+      "emotion": "happy",
+      "camera": "medium",
+      "visual": {
+        "kind": "list",
+        "items": [
+          "الشرط الصحيح",
+          "التجربة"
+        ],
+        "code": "",
+        "focus": "",
+        "status": "neutral"
+      }
+    }
+  ]
+}

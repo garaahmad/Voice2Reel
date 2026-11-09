@@ -1,0 +1,5 @@
+{
+  "stage": "failed",
+  "error": "Text model failed validation; see outputs/presenter_v2_ai/script.trace.json. Use --script with reviewed text.",
+  "elapsed_seconds": 66.37615180900002
+}

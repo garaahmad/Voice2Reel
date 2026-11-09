@@ -98,3 +98,16 @@ The new `voice2reel.presenter` path is implemented end to end. The local suite p
 Actual Piper Arabic and English weights ran on CPU. The reviewed Arabic example produced roughly 31 seconds of audio/video in approximately 10 seconds with local models and no output cache. A separate actual Qwen3 4B → Piper → MP4 run produced about 14 seconds of video in about 54 seconds. Raw responses, stage durations and compiled output are preserved under `examples/fast_presenter`; model downloads are excluded from these measurements. Reusing an identical reviewed-script output took about 0.2 seconds including CLI startup, without generating a new story.
 
 The Arabic/English examples are hand-authored/reviewed scripts, not raw AI output. The separate idea-driven sample is a raw project-model result and still needs language/editorial review. Representative frames were inspected, and complete MP4 decoding passed. Listening-quality and exact phoneme alignment are not claimed. GPU/Colab execution and timing are unmeasured; the new notebook is prepared but was not executed inside a real Colab allocation.
+
+
+## Presenter v2 (2026-11-09)
+
+- The final full suite passed **88 tests** after adding online-voice timing/failure tests, real music/effect energy checks, mix peak/ducking checks and music-cache invalidation. A targeted test also verifies that a rejected Latin identifier triggers a correction using the previous response.
+- Actual Microsoft Edge neural Arabic synthesis succeeded via the configured verified TLS/proxy environment. It produced provider word boundaries; no silent fallback was used.
+- Actual full WAV mixing and H.264/AAC encoding succeeded with original synthesized background music and transition effects. Stem RMS and master peaks are recorded per job.
+- The build wheel includes the Cairo font and its complete license. Mixed Arabic/Latin/punctuation coverage fixes missing glyphs observed with an Arabic-only system font.
+- CPU Qwen3 was run with the revised writing instructions. A real two-attempt output passed schema/language checks but failed manual editorial review; its exact wording and measurements are retained in `examples/presenter_v2/writing_review`. This is a writing limitation, not a successful quality benchmark.
+- Colab allocation, GPU execution, subjective voice quality and user acceptance of character design are not established by unit tests. The reviewed demo script is not attributed to model generation.
+
+
+The v2 Arabic reviewed clip (27.61 s) and English reviewed clip (17.01 s) both completed real online speech, mixing and encoding. Their jobs overlapped, so the recorded ~20 s and ~15.5 s pipeline times are not isolated speed benchmarks. See `examples/presenter_v2/measurements.json`. A separate all-Arabic-brief Qwen run also retained a wrong word (التمرين بدل الكتلة), documented in `plain_brief_run/review.json`; the writing limitation persists.

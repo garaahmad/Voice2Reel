@@ -1,0 +1,54 @@
+{
+  "title": "لماذا يعمل الكود والشرط غير صحيح؟",
+  "language": "ar",
+  "scenes": [
+    {
+      "narration": "الشرط غير صحيح، ومع ذلك يعمل الكود. كيف؟ انظر إلى هذه الفاصلة المنقوطة.",
+      "caption": "الشرط خطأ… والكود يعمل؟",
+      "gesture": "think",
+      "emotion": "thinking",
+      "camera": "wide",
+      "visual": {
+        "kind": "code",
+        "code": "if (ready); {\n  run();\n}",
+        "items": [
+          "لاحظ الفاصلة بعد الشرط"
+        ],
+        "focus": ";",
+        "status": "warning"
+      }
+    },
+    {
+      "narration": "في جافاسكربت، الفاصلة بعد قوس الشرط تنهيه بتعليمة فارغة. لذلك تُنفّذ الكتلة التالية دون ارتباط بالشرط.",
+      "caption": "فاصلة واحدة تفصل الكتلة",
+      "gesture": "point",
+      "emotion": "concerned",
+      "camera": "wide",
+      "visual": {
+        "kind": "code",
+        "code": "if (ready);\n{\n  run();\n}",
+        "items": [
+          "هذه الكتلة ستعمل في الحالتين"
+        ],
+        "focus": ";",
+        "status": "warning"
+      }
+    },
+    {
+      "narration": "احذف هذه الفاصلة، واترك الكتلة متصلة بالشرط. ثم اختبر النتيجة في الحالتين: شرط صحيح، وشرط غير صحيح.",
+      "caption": "احذفها، ثم اختبر",
+      "gesture": "thumbs_up",
+      "emotion": "happy",
+      "camera": "wide",
+      "visual": {
+        "kind": "code",
+        "code": "if (ready) {\n  run();\n}",
+        "items": [
+          "التنفيذ الآن يعتمد على الشرط"
+        ],
+        "focus": "if",
+        "status": "success"
+      }
+    }
+  ]
+}

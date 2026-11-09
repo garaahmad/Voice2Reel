@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "voice2reel-training"
-version = "0.3.0"
+version = "0.4.0"
 description = "Colab tools for AI-directed videos, Arabic/English narration, and model adaptation"
 requires-python = ">=3.11,<3.14"
 dependencies = ["pydantic==2.11.7", "numpy==2.2.6", "soundfile==0.13.1", "scipy==1.15.3"]
@@ -21,3 +21,6 @@ line-length = 110
 [tool.ruff.lint.per-file-ignores]
 "notebooks/*.ipynb" = ["E402"]
 
+
+[tool.setuptools.package-data]
+voice2reel = ["assets/*.ttf", "assets/*.txt", "assets/*.md"]

@@ -107,6 +107,7 @@ def project(tmp_path, monkeypatch):
     if not shutil.which("ffmpeg"):
         pytest.skip("ffmpeg missing")
     import voice2reel.fast_voice as voice
+    import voice2reel.neural_voice as neural
     import voice2reel.presenter_render as renderer
 
     monkeypatch.setitem(renderer.PROFILES, "fast", (270, 6, "ultrafast"))
@@ -134,6 +135,7 @@ def project(tmp_path, monkeypatch):
             return metadata
 
     monkeypatch.setattr(voice, "FastVoice", FakeVoice)
+    monkeypatch.setattr(neural, "NeuralVoice", FakeVoice)
     source = tmp_path / "input.json"
     write_json(source, sample().model_dump())
     return tmp_path / "project", source, FakeVoice
@@ -262,4 +264,38 @@ def test_identical_idea_cache_skips_model_loading(project, monkeypatch):
     run(output, request=request, device="cpu")
     _, metrics = run(output, request=request, device="cpu")
     assert len(calls) == 1
-    assert metrics["cache_hits"] == {"script": True, "voice": True, "video": True}
+    assert metrics["cache_hits"] == {"script": True, "voice": True, "mix": True, "video": True}
+
+
+def test_arabic_code_identifiers_trigger_repair_with_previous_response(tmp_path):
+    class Writer:
+        calls = 0
+        previous = None
+
+        def complete(self, messages, max_tokens):
+            self.calls += 1
+            if self.calls == 2:
+                assert messages[-2]["role"] == "assistant"
+                assert messages[-2]["content"] == self.previous
+            data = {
+                "title": "راجع الشرط",
+                "scenes": [
+                    {
+                        "narration": "راجع الشرط قبل تشغيل هذا البرنامج",
+                        "caption": "راجع الشرط",
+                        "labels": ["الشرط", "النتيجة"],
+                    }
+                    for _ in range(3)
+                ],
+            }
+            if self.calls == 1:
+                data["scenes"][0]["narration"] = "راجع شرط if قبل تشغيل هذا البرنامج"
+            self.previous = json.dumps(data, ensure_ascii=False)
+            return self.previous
+
+    writer = Writer()
+    script = generate_script(writer, {"language": "ar"}, tmp_path / "trace.json", attempts=2)
+    assert writer.calls == 2
+    assert "if" not in script.scenes[0].narration
+    trace = json.loads((tmp_path / "trace.json").read_text())
+    assert "error" in trace[0] and "error" not in trace[1]
