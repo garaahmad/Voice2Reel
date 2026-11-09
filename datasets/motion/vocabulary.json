@@ -1,0 +1,79 @@
+{
+  "cameras": [
+    "wide",
+    "medium",
+    "close"
+  ],
+  "comfort_limits": {
+    "camera_ease_seconds": 0.9,
+    "max_camera_step_per_scene": 1,
+    "max_flash_alpha": 0.12,
+    "max_gesture_switches_per_second": 0.5,
+    "max_jitter_amplitude": 2.0,
+    "max_secondary_frequency_hz": 0.6,
+    "max_subtitle_words": 4,
+    "min_safe_margin": 24,
+    "min_scene_seconds": 2.5
+  },
+  "easings": [
+    "smooth",
+    "linear",
+    "snap"
+  ],
+  "emotions": [
+    "neutral",
+    "happy",
+    "surprised",
+    "concerned",
+    "thinking"
+  ],
+  "gestures": [
+    "present",
+    "point",
+    "think",
+    "shrug",
+    "thumbs_up",
+    "wave"
+  ],
+  "note": "Bounded vocabulary for a deterministic 2D engine; no trainable animation model exists in this repository.",
+  "safe_zones": {
+    "actor": [
+      0,
+      250,
+      330,
+      860
+    ],
+    "headline": [
+      0,
+      0,
+      540,
+      250
+    ],
+    "panel": [
+      295,
+      430,
+      540,
+      820
+    ],
+    "subtitle": [
+      0,
+      860,
+      540,
+      960
+    ]
+  },
+  "transitions": [
+    "cut",
+    "wipe",
+    "fade",
+    "none"
+  ],
+  "version": "motion-vocabulary-v2",
+  "visuals": [
+    "none",
+    "list",
+    "flow",
+    "compare",
+    "code"
+  ]
+}

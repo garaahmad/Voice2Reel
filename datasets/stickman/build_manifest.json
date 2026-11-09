@@ -1,0 +1,70 @@
+{
+  "counts": {
+    "test": {
+      "defects": {
+        "abrupt_easing": 179,
+        "bad_proportions": 186,
+        "camera_jump": 198,
+        "cropped_head": 187,
+        "cut_too_fast": 174,
+        "dense_subtitle": 200,
+        "disconnected_joint": 208,
+        "foot_lift": 193,
+        "gesture_flicker": 186,
+        "harsh_flash": 192,
+        "jitter": 204,
+        "offscreen_actor": 198,
+        "overlap": 178
+      },
+      "needs_fix": 2483,
+      "professional": 2517,
+      "total": 5000
+    },
+    "train": {
+      "defects": {
+        "abrupt_easing": 1939,
+        "bad_proportions": 1918,
+        "camera_jump": 1899,
+        "cropped_head": 1958,
+        "cut_too_fast": 1961,
+        "dense_subtitle": 1914,
+        "disconnected_joint": 1901,
+        "foot_lift": 1927,
+        "gesture_flicker": 1931,
+        "harsh_flash": 1930,
+        "jitter": 1907,
+        "offscreen_actor": 1908,
+        "overlap": 1928
+      },
+      "needs_fix": 25021,
+      "professional": 24979,
+      "total": 50000
+    },
+    "validation": {
+      "defects": {
+        "abrupt_easing": 190,
+        "bad_proportions": 204,
+        "camera_jump": 211,
+        "cropped_head": 163,
+        "cut_too_fast": 173,
+        "dense_subtitle": 193,
+        "disconnected_joint": 198,
+        "foot_lift": 187,
+        "gesture_flicker": 191,
+        "harsh_flash": 186,
+        "jitter": 197,
+        "offscreen_actor": 201,
+        "overlap": 202
+      },
+      "needs_fix": 2496,
+      "professional": 2504,
+      "total": 5000
+    }
+  },
+  "features": 14,
+  "keypoints": 18,
+  "license": "CC0-1.0",
+  "provenance": "assistant-authored synthetic vector plans; CC0-1.0; no expert review",
+  "seed": 20261110,
+  "total": 60000
+}

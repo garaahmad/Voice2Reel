@@ -11,12 +11,15 @@ from types import SimpleNamespace
 
 import numpy as np
 import soundfile as sf
-from PIL import Image, ImageDraw, ImageFont, features
+from PIL import Image, ImageDraw, ImageFont
 
+from voice2reel.arabic_text import speech_text
+from voice2reel.motion_plan import fit_actor, scene_plan
 from voice2reel.motion_preview import ease, joint, mix
 from voice2reel.render import find_font, validate_timeline, wrap_text
+from voice2reel.text_layout import draw_text, text_length
 
-VERSION = "presenter-4-clean-face-arms"
+VERSION = "presenter-5-clean-face-arms-motion-arabic"
 PROFILES = {"fast": (540, 24, "ultrafast"), "quality": (720, 30, "veryfast")}
 INK, RED = "#172023", "#e34d3e"
 
@@ -176,8 +179,6 @@ def word_boundaries(segment):
 
 class PresenterRenderer:
     def __init__(self, script, segments, audio, rate, width=540):
-        if not features.check_feature("raqm"):
-            raise RuntimeError("Pillow needs RAQM for Arabic")
         self.script, self.segments = script, segments
         self.audio, self.rate = audio, rate
         self.width = width
@@ -185,6 +186,23 @@ class PresenterRenderer:
         self.font_path = str(bundled_font if bundled_font.is_file() else find_font())
         self.fonts = {}
         self.direction = "rtl" if script.language == "ar" else "ltr"
+        # Compile comfort-bounded camera/layout plans from the authored vocabulary.
+        # A wide -> close request becomes two adjacent steps instead of one jump.
+        self.plans = []
+        previous_camera = "wide"
+        for scene, segment in zip(script.scenes, segments):
+            plan = scene_plan(
+                {
+                    "camera": scene.camera,
+                    "gesture": scene.gesture,
+                    "emotion": scene.emotion,
+                },
+                previous_camera=previous_camera,
+                duration=segment["end"] - segment["start"],
+                panel_visible=scene.visual.kind != "none",
+            )
+            self.plans.append(plan)
+            previous_camera = plan["camera"]
         # Paint the background and all text once, rather than shaping Arabic every frame.
         self.bg = Image.new("RGB", (540, 960), "#f3f2ec")
         d = ImageDraw.Draw(self.bg)
@@ -203,7 +221,7 @@ class PresenterRenderer:
             boundaries = word_boundaries(segment)
             if boundaries:
                 groups = [boundaries[i : i + 4] for i in range(0, len(boundaries), 4)]
-                source_words = scene.narration.split()
+                source_words = speech_text(scene).split()
                 phrases = (
                     [" ".join(source_words[i : i + 4]) for i in range(0, len(source_words), 4)]
                     if len(source_words) == len(boundaries)
@@ -215,7 +233,7 @@ class PresenterRenderer:
                     [(g[0]["start"] - segment["start"]) / duration for g in groups[1:]] + [1.0]
                 )
             else:
-                words = scene.narration.split()
+                words = speech_text(scene).split()
                 groups = [" ".join(words[i : i + 4]) for i in range(0, len(words), 4)]
                 self.subtitles.append([self.subtitle(text) for text in groups])
                 cumulative = np.cumsum([len(text.split()) for text in groups])
@@ -236,7 +254,7 @@ class PresenterRenderer:
         while size > 12 and (
             len(wrap_text(text, font, width, direction)) > max_lines
             or any(
-                font.getlength(line, direction=direction) > width
+                text_length(line, font, direction) > width
                 for line in wrap_text(text, font, width, direction)
             )
         ):
@@ -244,15 +262,16 @@ class PresenterRenderer:
             font = self.font(size)
         lines = wrap_text(text, font, width, direction)
         for i, line in enumerate(lines[:max_lines]):
-            while font.getlength(line, direction=direction) > width and len(line) > 1:
+            while text_length(line, font, direction) > width and len(line) > 1:
                 line = line[:-2] + "…"
-            draw.text(
+            draw_text(
+                draw,
                 (xy[0], xy[1] + i * size * 1.45),
                 line,
-                font=font,
+                font,
+                direction,
                 fill=color,
                 anchor="mt",
-                direction=direction,
             )
 
     def headline(self, text, index):
@@ -271,9 +290,9 @@ class PresenterRenderer:
         height = 20 + len(lines) * 34
         d.rounded_rectangle((30, 0, 510, height), radius=13, fill="#172023f4")
         for i, line in enumerate(lines):
-            while font.getlength(line, direction=self.direction) > 444 and len(line) > 1:
+            while text_length(line, font, self.direction) > 444 and len(line) > 1:
                 line = line[:-2] + "…"
-            d.text((270, 10 + i * 34), line, font=font, fill="#fffef8", anchor="mt", direction=self.direction)
+            draw_text(d, (270, 10 + i * 34), line, font, self.direction, fill="#fffef8", anchor="mt")
         return im
 
     def panel(self, visual):
@@ -314,12 +333,13 @@ class PresenterRenderer:
                     )
                 if len(line) > limit:
                     line = line[: max(0, limit - 1)] + "…"
-                d.text(
+                draw_text(
+                    d,
                     (23, 49 + i * min(26, max(20, size + 3))),
                     line,
-                    font=font,
+                    font,
+                    "ltr",
                     fill=("#ffac99" if visual.status == "warning" else "#a4ebc8") if focused else "#e7f0e9",
-                    direction="ltr",
                 )
             if items:
                 self.text_block(d, items[0], (123, panel_height - 32), 218, 16, max_lines=1)
@@ -407,8 +427,10 @@ class PresenterRenderer:
         # Keep the jaw joined to the neck while reducing the oversized head.
         head = head.resize((334, 380), Image.Resampling.LANCZOS)
         im.alpha_composite(head, (round((78 + lean) * 2), round((319 + breath) * 2) - 500))
-        prior = CAMERAS[previous.camera] if index else CAMERAS[scene.camera]
-        current = CAMERAS[scene.camera]
+        plan = self.plans[index]
+        prior_camera = self.plans[index - 1]["camera"] if index else plan["camera"]
+        prior = CAMERAS[prior_camera]
+        current = CAMERAS[plan["camera"]]
         zoom, panx, pany = [mix(a, b, u) for a, b in zip(prior, current)]
         zoom += 0.012 * ease(local / max(0.1, self.segments[index]["end"] - self.segments[index]["start"]))
         tx, ty = 164 * (1 - zoom) + panx, 450 * (1 - zoom) + pany
@@ -417,7 +439,13 @@ class PresenterRenderer:
         actor = actor.resize(
             (round((crop[2] - crop[0]) * zoom), round((crop[3] - crop[1]) * zoom)), Image.Resampling.BICUBIC
         )
-        return actor, (round(crop[0] * zoom + tx), round(crop[1] * zoom + ty))
+        position = (round(crop[0] * zoom + tx), round(crop[1] * zoom + ty))
+        scale, x, y = fit_actor(actor.size, position, tuple(plan["boxes"]["actor"]))
+        if scale < 1.0:
+            actor = actor.resize(
+                (round(actor.width * scale), round(actor.height * scale)), Image.Resampling.LANCZOS
+            )
+        return actor, (x, y)
 
     def frame(self, t):
         index = next((i for i, s in enumerate(self.segments) if t < s["end"]), len(self.segments) - 1)
@@ -426,7 +454,7 @@ class PresenterRenderer:
         image = self.bg.copy().convert("RGBA")
         actor, position = self.character(t, index, local)
         image.alpha_composite(actor, position)
-        if self.script.scenes[index].camera != "close" and self.script.scenes[index].visual.kind != "none":
+        if self.plans[index]["camera"] != "close" and self.script.scenes[index].visual.kind != "none":
             enter = ease(local / 0.4)
             panel = self.panels[index]
             image.alpha_composite(panel, (round(540 - 245 * enter), 450))
@@ -469,8 +497,11 @@ class PresenterRenderer:
 
 
 def validate_audio(script, metadata, audio_path):
-    # Reuse the existing strict contiguous timing check with the same spoken text.
-    legacy = SimpleNamespace(beats=script.scenes, language=script.language)
+    # Reuse the strict contiguous timing check with the text actually spoken.
+    legacy = SimpleNamespace(
+        beats=[SimpleNamespace(narration=speech_text(s)) for s in script.scenes],
+        language=script.language,
+    )
     segments = validate_timeline(legacy, metadata)
     info = sf.info(audio_path)
     if not math.isfinite(info.duration) or abs(info.duration - metadata["duration"]) > 0.02:
@@ -559,4 +590,7 @@ def render(script, audio_path, metadata, output, profile="fast", *, soundtrack_p
         "width": width,
         "height": height,
         "frames": count,
+        "comfort_scores": [p["comfort_score"] for p in rig.plans],
+        "comfort_violations": [p["violations"] for p in rig.plans],
+        "camera_plan": [p["camera"] for p in rig.plans],
     }

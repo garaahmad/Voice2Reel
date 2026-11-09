@@ -267,6 +267,19 @@ def test_identical_idea_cache_skips_model_loading(project, monkeypatch):
     assert metrics["cache_hits"] == {"script": True, "voice": True, "mix": True, "video": True}
 
 
+def test_registered_technical_term_keeps_display_but_sends_arabic_speech():
+    from voice2reel.arabic_text import speech_text
+    from voice2reel.presenter_schema import parse_script
+
+    data = sample().model_dump()
+    data["scenes"][0]["narration"] = "مَرْحَبًا اليوم راح نشرح الـ for loop"
+    script = parse_script(data)
+    assert "for loop" in script.scenes[0].narration
+    assert speech_text(script.scenes[0]).startswith("مَرْحَبًا")
+    assert "for" not in speech_text(script.scenes[0])
+    assert "حلقة فور" in speech_text(script.scenes[0])
+
+
 def test_arabic_code_identifiers_trigger_repair_with_previous_response(tmp_path):
     class Writer:
         calls = 0

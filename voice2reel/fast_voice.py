@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 
+from voice2reel.arabic_text import speech_text
 from voice2reel.common import write_json
 
 REPOSITORY = "rhasspy/piper-voices"
@@ -44,14 +45,15 @@ class FastVoice:
         arrays, segments, cursor = [], [], 0
         rate = self.voice.config.sample_rate
         for scene in script.scenes:
-            chunks = [c.audio_float_array for c in self.voice.synthesize(scene.narration)]
+            text = speech_text(scene)
+            chunks = [c.audio_float_array for c in self.voice.synthesize(text)]
             if not chunks:
                 raise ValueError("Speech model returned no audio")
             audio = np.concatenate(chunks).astype(np.float32)
             if not len(audio) or not np.isfinite(audio).all() or not np.any(audio):
                 raise ValueError("Speech model returned invalid audio")
             segments.append(
-                {"text": scene.narration, "start": cursor / rate, "end": (cursor + len(audio)) / rate}
+                {"text": text, "start": cursor / rate, "end": (cursor + len(audio)) / rate}
             )
             arrays.append(audio)
             cursor += len(audio)

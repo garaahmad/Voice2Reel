@@ -1,5 +1,6 @@
 -e .
 Pillow==13.0.0
+arabic-reshaper==3.1.0
 piper-tts==1.3.0
 onnxruntime==1.23.2
 huggingface-hub==0.36.0

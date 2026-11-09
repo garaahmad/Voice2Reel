@@ -1,0 +1,53 @@
+{
+  "samples": [
+    {
+      "file": "sample_00_present.png",
+      "defect": null,
+      "gesture": "present",
+      "caption": "قسّم المسألة"
+    },
+    {
+      "file": "sample_01_point.png",
+      "defect": null,
+      "gesture": "point",
+      "caption": "ثبّت القيمة"
+    },
+    {
+      "file": "sample_02_wave.png",
+      "defect": null,
+      "gesture": "wave",
+      "caption": "قارن الحالتين"
+    },
+    {
+      "file": "sample_03_disconnected_joint.png",
+      "defect": "disconnected_joint",
+      "gesture": "present",
+      "caption": "ارسم الفكرة"
+    },
+    {
+      "file": "sample_04_bad_proportions.png",
+      "defect": "bad_proportions",
+      "gesture": "shrug",
+      "caption": "افحص المدخل"
+    },
+    {
+      "file": "sample_05_offscreen_actor.png",
+      "defect": "offscreen_actor",
+      "gesture": "present",
+      "caption": "نتيجة قابلة للقياس"
+    },
+    {
+      "file": "sample_06_cropped_head.png",
+      "defect": "cropped_head",
+      "gesture": "present",
+      "caption": "تحقق أولا"
+    },
+    {
+      "file": "sample_07_overlap.png",
+      "defect": "overlap",
+      "gesture": "present",
+      "caption": "لا تكرر الكود"
+    }
+  ],
+  "note": "Deterministic vector samples from the synthetic drawing corpus; not AI-generated artwork."
+}

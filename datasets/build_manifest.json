@@ -1,0 +1,29 @@
+{
+  "counts": {
+    "codeswitch": {
+      "test": 70,
+      "train": 620,
+      "validation": 70
+    },
+    "lexicon_terms": 95,
+    "motion_annotations": 3240,
+    "motion_plans": {
+      "test": 120,
+      "train": 960,
+      "validation": 120
+    },
+    "scripts_new": {
+      "test": 90,
+      "train": 900,
+      "validation": 90
+    },
+    "tashkeel": {
+      "test": 60,
+      "train": 480,
+      "validation": 60
+    },
+    "voice_prompts": 140
+  },
+  "provenance": "assistant-authored synthetic; CC0-1.0; no expert review",
+  "seed": 20261109
+}

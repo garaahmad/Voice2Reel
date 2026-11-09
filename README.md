@@ -172,6 +172,8 @@ Five questions capture the audience, duration, language, facts, and visual focus
 
 The writer validates structure and language, and may make one correction attempt after validation fails. Use `--text-attempts 1` to disable that retry. These checks do not verify factual accuracy or editorial quality. Review the resulting script before sharing it; the [writing review examples](examples/presenter_v2/writing_review/README.md) document observed limitations.
 
+Arabic writing targets simple, spoken Modern Standard Arabic, concrete explanation and practical steps. Few-shot examples guide style. Registered technical phrases such as `for loop` may appear in display narration and are converted to an Arabic-only reading for the speech engine; bare code identifiers such as `if` or `console` are still rejected. A second correction call is allowed only after validation failure; `--text-attempts 1` disables it. These checks do not establish factual or editorial quality. A rejected actual model attempt is retained in [the v2 examples](examples/presenter_v2).
+
 ## Development
 
 Install the development tools alongside the presenter dependencies:
@@ -199,8 +201,38 @@ The repository retains training and voice experiments alongside the current pres
 | [00_ready_voice_ar_en](notebooks/00_ready_voice_ar_en.ipynb) | Original preset XTTS narration |
 | [01_scriptwriter_qlora](notebooks/01_scriptwriter_qlora.ipynb) | Original 1.5B QLoRA scriptwriter training |
 | [02_arabic_voice_xtts](notebooks/02_arabic_voice_xtts.ipynb) | XTTS cloning and fine-tuning |
+| [05_quality_loop](notebooks/05_quality_loop.ipynb) | Measured v2 quality loop: CPU gate + GPU QLoRA cycles |
+| [06_stickman_generator](notebooks/06_stickman_generator.ipynb) | Stickman drawing corpus + CPU/MLP demo pipeline |
+| [07_stickman_full_production](notebooks/07_stickman_full_production.ipynb) | Full Stickman production studio: train once → Qwen content → silent video → voice → mux |
 
 Older 1.5B adapters are incompatible with the current Qwen3 4B writer. No newly trained weights are shipped. Realistic-video notebook 03 and earlier motion studies are historical experiments, separate from the current presenter workflow.
+
+## v2 Arabic, code-switching and motion data
+
+`datasets/` now contains authored synthetic splits for full tashkeel (600 rows), mixed Arabic/English technical terms (760 rows), bounded motion plans (1200 rows), 930/95/95 scriptwriter records, 3240 scene annotations and 140 voice-recording prompts. A 95-term pronunciation lexicon and a motion vocabulary are mirrored into `voice2reel/assets/`. All v2 material is assistant-authored, CC0-1.0, deterministic (`python scripts/build_datasets.py`), and **not expert-reviewed**.
+
+```bash
+python scripts/build_datasets.py            # regenerate byte-identical files
+python scripts/build_datasets.py --check    # verify reproducibility
+python scripts/check_data.py                # validate all splits, leakage, mirrors, manifest
+python -m voice2reel.quality_gate --output examples/quality_v2/rounds.json
+```
+
+`voice2reel/quality_gate.py` fits three small front-end models on CPU (diacritizer, code-switch reader, comfort classifier) and measures them on held-out splits; the Qwen scriptwriter is trained separately on the user's Colab GPU in notebook 05. The measured CPU front-end score is documented in [quality_v2/rounds.json](examples/quality_v2/rounds.json) and [QUALITY_V2.md](docs/QUALITY_V2.md). It is **not** a 90% claim about factual accuracy, voice naturalness, subjective video quality, or the production Qwen3-4B writer.
+
+## Large Stickman drawing corpus
+
+`datasets/stickman/` adds **60,000** deterministic vector drawing plans (50,000/5,000/5,000). Each row stores 18 named 2D joints, 14 numeric features, an actor box, camera/gesture/emotion/intent metadata, and either a professional plan or exactly one of 13 named defects. The corpus teaches two-bone IK, proportions, stroke style, layer order, safe zones, easing and defect detection to the **existing deterministic vector renderer** — it is not a raster/diffusion image dataset. All rows are assistant-authored synthetic CC0-1.0 material with no expert review.
+
+```bash
+python scripts/build_stickman_drawing_data.py --check
+python -m voice2reel.stickman_artist --output examples/stickman_drawing/artist_rounds.json
+python -m voice2reel.stickman_artist --render-samples examples/stickman_drawing/samples
+```
+
+`voice2reel/stickman_artist.py` fits a small CPU ridge model for joint prediction and a learned max-margin defect detector. Three documented rounds reach `0.9304` on validation and `0.9299` on the held-out test split; see [artist_rounds.json](examples/stickman_drawing/artist_rounds.json), [sample frames](examples/stickman_drawing/samples) and [QUALITY_V2.md](docs/QUALITY_V2.md). This is a measured synthetic CPU benchmark, **not** a claim about subjective professional aesthetics, production video quality, or improved `Qwen` weights.
+
+For the drawing-data/demo path, `notebooks/06_stickman_generator.ipynb` regenerates/validates the 60k corpus, fits the CPU gate, trains a small PyTorch MLP and assembles a deterministic MP4 demo. For the **full production studio**, run `notebooks/07_stickman_full_production.ipynb`: it trains `Qwen2.5-1.5B` LoRA + the Stickman MLP **once**, saves `model_training_results.json` / `نتائج_تدريب_الموديل.json`, then reuses that file to turn a title + idea + source text into a Qwen-generated script, a silent video, scene audio, and a synced final MP4. It requires T4 for the one-off training; later runs reuse the saved file and do **not** retrain. Notebook 05 still measures the production writer and writes the Qwen `final_report.json`.
 
 ## Current limitations
 
