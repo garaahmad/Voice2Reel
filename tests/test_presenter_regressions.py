@@ -41,6 +41,9 @@ def test_visible_arm_passes_through_solved_elbow(monkeypatch, gesture, local):
     monkeypatch.setattr(renderer, 'rounded_line', line)
     actor.character(4 + local, 1, local)
     assert len(solved) == 2
+    # The relaxed left arm must bend away from the torso, including while
+    # switching poses. The old inward solution made it cross the body.
+    assert solved[0][1][0] < solved[0][0][0]
     for bones in solved:
         pixels = [(round(x * 2), round(y * 2) - 500) for x, y in bones]
         assert pixels in drawn, 'The visible arm must follow both bones through the elbow'
@@ -62,3 +65,11 @@ def test_reviewed_example_code_exhibits_and_fixes_the_explained_bug():
             )
             result = subprocess.run([node, '-e', program], capture_output=True, text=True, check=True)
             assert int(result.stdout) == (int(ready) if i == 2 else 1)
+
+
+@pytest.mark.parametrize("mouth", [0, 1, 2, 3])
+def test_mouth_has_no_red_tongue_dot(mouth):
+    face = renderer.face("happy", mouth, False)
+    pixels = np.asarray(face.crop((180, 340, 290, 420)))
+    red = (pixels[:, :, 0].astype(float) > pixels[:, :, 1] * 1.5) & (pixels[:, :, 0] > 80)
+    assert not np.any(red & (pixels[:, :, 3] > 0))

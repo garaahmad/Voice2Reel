@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw, ImageFont, features
 from voice2reel.motion_preview import ease, joint, mix
 from voice2reel.render import find_font, validate_timeline, wrap_text
 
-VERSION = "presenter-3-proportioned-rig"
+VERSION = "presenter-4-clean-face-arms"
 PROFILES = {"fast": (540, 24, "ultrafast"), "quality": (720, 30, "veryfast")}
 INK, RED = "#172023", "#e34d3e"
 
@@ -89,7 +89,6 @@ def face(emotion, mouth, blink, look=0, tilt=0):
     # Closed mouth during pauses, even when the expression is surprised.
     if mouth == 3:
         ellipse((105, 175, 128, 198), INK)
-        ellipse((110, 191, 125, 197), "#df7b72")
     elif mouth == 2:
         path(
             curve([(91, 175), (106, 182), (126, 182), (140, 173)])
@@ -97,7 +96,6 @@ def face(emotion, mouth, blink, look=0, tilt=0):
             INK,
         )
         path([(97, 179), (134, 179), (130, 186), (102, 186)], "#fffef9")
-        ellipse((110, 195, 129, 202), "#df7b72")
     elif mouth == 1:
         ellipse((101, 179, 132, 193), INK)
     elif emotion == "concerned":
@@ -108,20 +106,14 @@ def face(emotion, mouth, blink, look=0, tilt=0):
         line(curve([(106, 187), (114, 184), (122, 184), (130, 187)]), 2.7)
     else:
         line(curve([(96, 181), (108, 197), (129, 193), (139, 178)]), 2.7)
-    # Compact illustrated beret: a simple readable silhouette rather than a long pointed cap.
-    hat = curve([(22, 98), (6, 65), (58, 39), (107, 33)])
-    hat += curve([(107, 33), (153, 14), (206, 34), (207, 65)])[1:]
-    hat += curve([(207, 65), (207, 88), (169, 96), (133, 93)])[1:]
-    hat += curve([(133, 93), (92, 92), (56, 117), (22, 98)])[1:]
-    path(hat, "#e84b3c", INK, 4)
-    highlight = curve([(35, 77), (59, 50), (124, 31), (163, 38)])
-    highlight += curve([(163, 38), (187, 43), (187, 57), (164, 56)])[1:]
-    highlight += curve([(164, 56), (113, 45), (69, 66), (35, 77)])[1:]
-    path(highlight, "#fa7158")
-    brim = curve([(28, 95), (69, 94), (115, 75), (169, 83)])
-    brim += curve([(169, 83), (140, 99), (93, 99), (47, 110)])[1:]
-    path(brim, "#bd332c", INK, 2)
-    path([(112, 34), (105, 19), (109, 15), (116, 18), (122, 32)], "#d74235", INK, 2)
+    # A fitted, symmetric cap with one continuous crown and a clean band.
+    # No floating stem, overlapping brim, or detached decorative shapes.
+    hat = curve([(38, 96), (38, 27), (190, 27), (190, 96)])
+    hat += [(190, 105), (38, 105)]
+    path(hat, "#e84b3c", INK, 3)
+    band = curve([(38, 93), (85, 88), (145, 88), (190, 93)])
+    band += [(190, 105), (38, 105)]
+    path(band, "#c93e32", INK, 2)
     if tilt:
         im = im.rotate(tilt, resample=Image.Resampling.BICUBIC, center=(220, 350))
     return im
@@ -153,12 +145,12 @@ def glove(kind, angle):
 
 
 GESTURES = {
-    "present": ((109, 653), (284, 570), "rest", "open", 0, -75),
-    "point": ((109, 653), (295, 518), "rest", "point", 0, -90),
-    "think": ((109, 653), (228, 456), "rest", "rest", -25, 145),
-    "shrug": ((72, 534), (280, 526), "open", "open", 65, -65),
-    "thumbs_up": ((110, 650), (278, 519), "rest", "thumb", 0, -5),
-    "wave": ((108, 650), (270, 395), "rest", "open", 0, 5),
+    "present": ((109, 641), (278, 574), "rest", "open", 0, -75),
+    "point": ((109, 641), (278, 520), "rest", "point", 0, -90),
+    "think": ((109, 641), (210, 490), "rest", "rest", 0, 145),
+    "shrug": ((90, 620), (270, 550), "open", "open", 65, -65),
+    "thumbs_up": ((109, 641), (265, 535), "rest", "thumb", 0, -5),
+    "wave": ((109, 641), (238, 432), "rest", "open", 0, 5),
 }
 CAMERAS = {"wide": (1.0, 0.0, 0.0), "medium": (1.13, -7.0, -4.0), "close": (1.5, 105.0, 35.0)}
 
@@ -396,7 +388,7 @@ class PresenterRenderer:
                     wrist[0] + amp * math.sin(local * (6.8 if amp == 9 else 2.6)) * u,
                     wrist[1] + 2 * math.sin(local * 2.1) * u,
                 )
-            elbow, end = joint(shoulders[side], wrist, 76, 78, 1 if side else -1)
+            elbow, end = joint(shoulders[side], wrist, 64, 70, 1)
             # Draw the solved bones through the elbow. A cubic shortcut visibly
             # shortened the upper arm and made the limb look like rubber.
             line([shoulders[side], elbow, end], 11)
