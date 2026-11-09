@@ -16,7 +16,7 @@ from voice2reel.voice.model import MODEL_REVISION as XTTS_REVISION
 from voice2reel.presenter_schema import PresenterScript, ReelRequest, parse_script
 from voice2reel.presenter_render import VERSION as RENDER_VERSION, render, validate_audio
 
-PROMPT_VERSION = "presenter-3-natural-arabic"
+PROMPT_VERSION = "presenter-4-precise-technical-arabic"
 
 
 def signature(value):
@@ -70,6 +70,8 @@ def generate_script(writer, request, trace_path, attempts=1):
         "ممنوع وضع أي كلمة لاتينية أو اسم كود في الكلام المنطوق؛ استعمل الوصف العربي الصحيح. "
         "تسميات اللوحات أشياء أو خطوات واضحة من الفكرة، لا صفات مبهمة مثل محدد أو إجباري. "
         "التزم بالحقائق المعطاة، ولا تصف حركة الشخصية في الكلام المنطوق. لا تقرأ كودًا حرفيًا. "
+        "حافظ على الاسم الكامل للمصطلح: الفاصلة المنقوطة ليست الفاصلة، وجافا سكريبت ليست جافا. "
+        "عند شرح خطأ برمجي حدد موضعه وسببه بدقة؛ لا تعمم أن علامة صحيحة في مواضع أخرى خطأ دائمًا. "
         if language == "ar"
         else "Write a concise English explainer. Follow the supplied facts; do not invent claims. "
         "Narration teaches the topic, not the character movements. Do not read code aloud. "

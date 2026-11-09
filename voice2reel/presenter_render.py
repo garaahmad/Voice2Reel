@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw, ImageFont, features
 from voice2reel.motion_preview import ease, joint, mix
 from voice2reel.render import find_font, validate_timeline, wrap_text
 
-VERSION = "presenter-2"
+VERSION = "presenter-3-proportioned-rig"
 PROFILES = {"fast": (540, 24, "ultrafast"), "quality": (720, 30, "veryfast")}
 INK, RED = "#172023", "#e34d3e"
 
@@ -149,7 +149,7 @@ def glove(kind, angle):
         for x, y in [(38, 103), (52, 111), (66, 108), (78, 99)]:
             rounded_line(d, [(x, 77), (x - 3, y)], 13)
         rounded_line(d, [(37, 65), (21, 83)], 14)
-    return im.rotate(angle, resample=Image.Resampling.BICUBIC, expand=False)
+    return im.rotate(angle, resample=Image.Resampling.BICUBIC, center=(56, 76), expand=False)
 
 
 GESTURES = {
@@ -357,7 +357,7 @@ class PresenterRenderer:
         breath = 1.4 * math.sin(t * 2.1)
         lean = mix(0 if index == 0 else 2, 4 if scene.gesture == "point" else -2, u)
         lean += 1.6 * math.sin(t * 0.8)
-        hip = (164 + 2 * math.sin(t * 0.7), 650)
+        hip = (164 + 1.2 * math.sin(t * 0.7), 665)
 
         def line(points, width):
             rounded_line(d, [(round(x * 2), round(y * 2) - 500) for x, y in points], round(width * 2))
@@ -378,10 +378,10 @@ class PresenterRenderer:
                 (x - 11 * mirror, 852),
             ]
             d.polygon([(round(px * 2), round(py * 2) - 500) for px, py in shoe], fill=INK)
-        torso = curve([(164 + lean, 468 + breath), (164 + lean, 530 + breath), (169, 601), hip])
-        line(torso, 22)
-        shoulders = [(148 + lean, 498 + breath), (181 + lean, 499 + breath)]
-        line([shoulders[0], (164 + lean, 488 + breath), shoulders[1]], 17)
+        torso = curve([(164 + lean, 486 + breath), (164 + lean, 540 + breath), (167, 615), hip])
+        line(torso, 18)
+        shoulders = [(137 + lean, 516 + breath), (191 + lean, 516 + breath)]
+        line([shoulders[0], (164 + lean, 505 + breath), shoulders[1]], 15)
         for side in [0, 1]:
             a, b = old[side], new[side]
             wrist = (mix(a[0], b[0], u), mix(a[1], b[1], u) + breath)
@@ -396,17 +396,10 @@ class PresenterRenderer:
                     wrist[0] + amp * math.sin(local * (6.8 if amp == 9 else 2.6)) * u,
                     wrist[1] + 2 * math.sin(local * 2.1) * u,
                 )
-            elbow, end = joint(shoulders[side], wrist, 91, 98, 1 if side else -1)
-            # A curved elbow makes the silhouette feel drawn, without disconnected joints.
-            points = curve(
-                [
-                    shoulders[side],
-                    (mix(shoulders[side][0], elbow[0], 0.8), mix(shoulders[side][1], elbow[1], 0.8)),
-                    elbow,
-                    end,
-                ]
-            )
-            line(points, 12)
+            elbow, end = joint(shoulders[side], wrist, 76, 78, 1 if side else -1)
+            # Draw the solved bones through the elbow. A cubic shortcut visibly
+            # shortened the upper arm and made the limb look like rubber.
+            line([shoulders[side], elbow, end], 11)
             kind = new[2 + side] if u > 0.5 else old[2 + side]
             angle = round(mix(old[4 + side], new[4 + side], u) / 5) * 5
             hand = glove(kind, angle)
@@ -419,7 +412,9 @@ class PresenterRenderer:
         blink = abs((t + 1.2) % 4.4 - 2.2) < 0.065
         tilt = round(mix(0, -3 if scene.emotion in ("thinking", "concerned") else 2, u))
         head = face(scene.emotion, mouth, blink, 2 if scene.gesture == "point" else 0, tilt)
-        im.alpha_composite(head, (round((50 + lean) * 2), round((250 + breath) * 2) - 500))
+        # Keep the jaw joined to the neck while reducing the oversized head.
+        head = head.resize((334, 380), Image.Resampling.LANCZOS)
+        im.alpha_composite(head, (round((78 + lean) * 2), round((319 + breath) * 2) - 500))
         prior = CAMERAS[previous.camera] if index else CAMERAS[scene.camera]
         current = CAMERAS[scene.camera]
         zoom, panx, pany = [mix(a, b, u) for a, b in zip(prior, current)]

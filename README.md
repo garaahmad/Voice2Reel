@@ -91,6 +91,8 @@ Reviewed script ─────────────────────�
 Idea → Optional AI writer → Review ──┘
 ```
 
+The character is drawn by the Python renderer. The optional Qwen3 4B writer generates script text; it does not generate the character artwork.
+
 A script defines narration, captions, gestures, camera framing, and explanatory visuals for each scene. See the [Arabic example](examples/presenter_v2/semicolon_ar.json) for the structure and the [presenter guide](docs/PRESENTER_V2.md) for visual fields and sound settings.
 
 The output directory includes:
