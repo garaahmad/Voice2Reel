@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Voice2Reel Stickman Python Code SFT record",
+  "type": "object",
+  "required": ["id", "family_id", "engine_version", "provenance", "license", "messages"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "family_id": {"type": "string", "minLength": 1},
+    "engine_version": {"type": "string", "minLength": 1},
+    "provenance": {"type": "string", "minLength": 1},
+    "license": {"type": "string", "minLength": 1},
+    "messages": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "prefixItems": [
+        {"$ref": "#/$defs/system"},
+        {"$ref": "#/$defs/user"},
+        {"$ref": "#/$defs/assistant"}
+      ],
+      "items": false
+    }
+  },
+  "$defs": {
+    "system": {"type":"object","required":["role","content"],"additionalProperties":false,"properties":{"role":{"const":"system"},"content":{"type":"string","minLength":1}}},
+    "user": {"type":"object","required":["role","content"],"additionalProperties":false,"properties":{"role":{"const":"user"},"content":{"type":"string","minLength":1}}},
+    "assistant": {"type":"object","required":["role","content"],"additionalProperties":false,"properties":{"role":{"const":"assistant"},"content":{"type":"string","minLength":1}}}
+  }
+}
