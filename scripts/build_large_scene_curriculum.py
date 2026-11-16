@@ -94,7 +94,8 @@ def generate(index, seed):
     topic = TOPICS[index % len(TOPICS)]
     lang = LANGUAGES[(index // len(TOPICS)) % 2]
     phrases = AR if lang == "ar" else EN
-    structure = rng.choice(STORY_STRUCTURES)\n    shots = len(structure)
+    structure = rng.choice(STORY_STRUCTURES)
+    shots = len(structure)
     width, height = rng.choice(FRAMINGS)
     idea = (
         f"Create a {shots}-shot {'Arabic' if lang == 'ar' else 'English'} "
@@ -131,7 +132,8 @@ def generate(index, seed):
         ],
         "metadata": {
             "topic": topic, "language": lang, "shot_count": shots,
-            "generator_seed": seed, "story_structure": structure,\n            "quality": "synthetic_semantic_choreography_not_artist_reviewed",
+            "generator_seed": seed, "story_structure": structure,
+            "quality": "synthetic_semantic_choreography_not_artist_reviewed",
             "character_policy": "external_locked_template",
         },
     }
