@@ -15,7 +15,7 @@ TOPICS = [
     "Python basics", "Git branches", "Flutter widgets", "REST APIs",
     "database indexes", "unit tests", "debugging", "security",
     "data structures", "algorithms", "responsive design", "accessibility",
-    "cloud deployment", "networking", "productivity", "machine learning",
+    "cloud deployment", "networking", "routers and Wi-Fi", "productivity", "machine learning",
     "user experience", "authentication", "caching", "performance",
     "error handling", "version control", "state management", "code reviews",
     "CI pipelines", "Docker", "Linux", "API pagination", "SQL joins",
@@ -113,6 +113,15 @@ def generate(index, seed):
         narration = text.format(topic=topic)
         word_count = len(narration.split())
         seconds = round(min(12.0, max(2.5, word_count / (2.5 if lang == "en" else 2.2) + 0.8)), 2)
+        props = []
+        if topic in ("networking", "routers and Wi-Fi"):
+            kind = ("router", "ethernet_cable", "wifi_signal", "phone", "laptop")[j % 5]
+            props = [{"kind": kind, "animation": "pulse" if kind == "wifi_signal" else "pop_in",
+                      "x": 0.76, "y": 0.38 if kind in ("router", "wifi_signal") else 0.48,
+                      "start": 0.2, "end": seconds}]
+        elif topic in ("cloud deployment", "Docker"):
+            props = [{"kind": "server", "animation": "pop_in", "x": 0.76,
+                      "y": 0.42, "start": 0.2, "end": seconds}]
         code.append("shot(" + ", ".join([
             "caption=" + json.dumps(caption, ensure_ascii=False),
             "narration=" + json.dumps(narration, ensure_ascii=False),
@@ -120,6 +129,7 @@ def generate(index, seed):
             "gesture=" + json.dumps(gesture),
             "camera=" + json.dumps(camera),
             "transition=" + json.dumps(rng.choice(TRANSITIONS)),
+            "objects=" + repr(json.dumps(props, ensure_ascii=False)),
         ]) + ")")
     response = "\n".join(code)
     parse_python_scene(response)
