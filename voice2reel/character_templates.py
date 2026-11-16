@@ -394,76 +394,103 @@ def _head(draw, points, template, emotion):
                       head[0] + 7, head[1] - radius * 1.45), fill=accent, outline=ink, width=2)
 
 
+def _smooth_limb(draw, a, b, thickness, color):
+    """Capsule-like segment, with rounded ends and no exposed joint markers."""
+    thickness = max(2, int(round(thickness)))
+    draw.line((*a, *b), fill=color, width=thickness, joint="curve")
+    r = thickness / 2
+    for x, y in (a, b):
+        draw.ellipse((x-r, y-r, x+r, y+r), fill=color)
+
+
+def _two_bone_joint(root, target, upper, lower, bend=1):
+    """Place an elbow/knee while preserving both limb lengths."""
+    dx, dy = target[0]-root[0], target[1]-root[1]
+    distance = max(1e-6, math.hypot(dx, dy))
+    distance = min(max(distance, abs(upper-lower)+0.01), upper+lower-0.01)
+    ux, uy = dx/max(1e-6, math.hypot(dx, dy)), dy/max(1e-6, math.hypot(dx, dy))
+    along = (upper*upper - lower*lower + distance*distance)/(2*distance)
+    offset = math.sqrt(max(0.0, upper*upper - along*along))
+    return (root[0] + ux*along - uy*offset*bend,
+            root[1] + uy*along + ux*offset*bend)
+
+
 def draw_character(draw, points, template_id="classic", emotion="happy", phase=0.0):
-    """Draw the chosen character onto an existing PIL ImageDraw surface."""
+    """Premium, consistent character silhouette for every visual theme.
+
+    Uses the supplied pose targets but reconstructs arms/legs with two-bone IK.
+    No hats, exposed joint dots, robotic plates or disconnected segments.
+    """
     template = get_template(template_id)
     ink, accent = template["ink"], template["accent"]
-    width = max(3, template["stroke"])
-    body = template["body"]
+    center = points["head_center"]
+    head_radius = max(8.0, abs(points["head_bottom"][1]-points["head_top"][1])/2)
+    shoulder_l, shoulder_r = points["shoulder_left"], points["shoulder_right"]
+    shoulder = ((shoulder_l[0]+shoulder_r[0])/2, (shoulder_l[1]+shoulder_r[1])/2)
+    hip = points["hip"]
+    body_height = max(35.0, abs(hip[1]-shoulder[1]))
+    thickness = max(3, round(body_height*0.065))
+    arm_thickness = max(3, round(thickness*0.78))
+    leg_thickness = max(3, round(thickness*0.92))
 
-    if "aura" in template["extras"]:
-        hx, hy = points["head_center"]
-        draw.ellipse((hx - 125, hy - 125, hx + 125, hy + 125), fill=template["panel"])
-    if "backpack" in template["extras"]:
-        sl, sr = points["shoulder_left"], points["shoulder_right"]
-        draw.rounded_rectangle((sl[0] - width * 1.4, sl[1] - 6,
-                                sr[0] - width * 0.2, points["torso_mid"][1] + 20),
-                               radius=12, fill=template["panel"], outline=ink, width=3)
-    if "cape" in template["extras"]:
-        draw.polygon([points["shoulder_left"], points["shoulder_right"],
-                      (points["foot_right"][0] + 26, points["foot_right"][1]),
-                      (points["foot_left"][0] - 26, points["foot_left"][1])], fill=accent)
-
-    shadow_y = max(points["foot_left"][1], points["foot_right"][1]) + 10
-    draw.ellipse((points["foot_left"][0] - 70, shadow_y - 10,
-                  points["foot_right"][0] + 70, shadow_y + 14), fill=template["panel"])
+    # A restrained accent shirt makes all themes feel like one designed series.
+    torso_top = (shoulder[0], shoulder[1]+body_height*0.02)
+    torso_bottom = (hip[0], hip[1]-body_height*0.02)
+    _smooth_limb(draw, torso_top, torso_bottom, thickness*1.25, ink)
+    _smooth_limb(draw, shoulder_l, shoulder_r, thickness*0.86, ink)
+    chest = (shoulder[0], shoulder[1]+body_height*0.23)
+    r = thickness*0.50
+    draw.ellipse((chest[0]-r, chest[1]-r, chest[0]+r, chest[1]+r), fill=accent)
 
     for side in ("left", "right"):
-        _segment(draw, points["hip"], points[f"knee_{side}"], width + 2, ink, accent, body)
-        _segment(draw, points[f"knee_{side}"], points[f"ankle_{side}"], width + 2, ink, accent, body)
-        _segment(draw, points[f"ankle_{side}"], points[f"foot_{side}"], width, ink, accent, body)
-        _segment(draw, points[f"shoulder_{side}"], points[f"elbow_{side}"], width, ink, accent, body)
-        _segment(draw, points[f"elbow_{side}"], points[f"wrist_{side}"], width, ink, accent, body)
+        root = points[f"shoulder_{side}"]
+        wrist_target = points[f"wrist_{side}"]
+        original_elbow = points[f"elbow_{side}"]
+        # Fit lengths to each character scale; preserve reachable targets.
+        arm_length = max(body_height*0.46,
+                         math.hypot(original_elbow[0]-root[0], original_elbow[1]-root[1]))
+        forearm_length = max(body_height*0.43,
+                             math.hypot(wrist_target[0]-original_elbow[0],
+                                        wrist_target[1]-original_elbow[1]))
+        dx, dy = wrist_target[0]-root[0], wrist_target[1]-root[1]
+        dist = math.hypot(dx, dy)
+        max_reach = (arm_length+forearm_length)*0.97
+        if dist > max_reach:
+            wrist_target = (root[0]+dx*max_reach/dist,
+                            root[1]+dy*max_reach/dist)
+        elbow = _two_bone_joint(root, wrist_target, arm_length, forearm_length,
+                                bend=-1 if side=="left" else 1)
+        _smooth_limb(draw, root, elbow, arm_thickness, ink)
+        _smooth_limb(draw, elbow, wrist_target, arm_thickness, ink)
+        # Small filled mitten rather than a disconnected circle.
+        hr = arm_thickness*0.68
+        draw.ellipse((wrist_target[0]-hr, wrist_target[1]-hr,
+                      wrist_target[0]+hr, wrist_target[1]+hr), fill=ink)
 
-    if body == "ribbon":
-        draw.polygon([points["shoulder_left"], points["shoulder_right"],
-                      points["hip"], points["torso_mid"]], fill=ink)
-        draw.line((*points["neck"], *points["hip"]), fill=accent, width=4)
-    else:
-        _segment(draw, points["hip"], points["torso_mid"], width + 4, ink, accent, body)
-        _segment(draw, points["torso_mid"], points["neck"], width + 4, ink, accent, body)
-        _segment(draw, points["shoulder_left"], points["shoulder_right"], width, ink, accent, body)
-    _segment(draw, points["neck"], points["head_bottom"], width, ink, accent, body)
+        # Leg chains use one continuous silhouette with small natural feet.
+        knee = points[f"knee_{side}"]
+        ankle = points[f"ankle_{side}"]
+        foot = points[f"foot_{side}"]
+        _smooth_limb(draw, hip, knee, leg_thickness, ink)
+        _smooth_limb(draw, knee, ankle, leg_thickness, ink)
+        toe_direction = -1 if side=="left" else 1
+        toe = (ankle[0]+toe_direction*body_height*0.15, ankle[1]+body_height*0.025)
+        _smooth_limb(draw, ankle, toe, leg_thickness*0.78, ink)
 
-    if "tie" in template["extras"]:
-        n = points["neck"]
-        draw.polygon([(n[0] - 6, n[1] + 4), (n[0] + 6, n[1] + 4),
-                      (n[0], n[1] + 46)], fill=accent)
-    if "scarf" in template["extras"]:
-        n = points["neck"]
-        draw.rounded_rectangle((n[0] - 32, n[1] - 8, n[0] + 32, n[1] + 12),
-                               radius=6, fill=accent)
-    if "badge" in template["extras"]:
-        c = points["torso_mid"]
-        draw.ellipse((c[0] - 13, c[1] - 13, c[0] + 13, c[1] + 13),
-                     fill=accent, outline=ink, width=2)
-    if "book" in template["extras"]:
-        w = points["wrist_left"]
-        draw.rounded_rectangle((w[0] - 40, w[1] - 26, w[0] + 26, w[1] + 18),
-                               radius=4, fill=template["panel"], outline=ink, width=3)
-        draw.line((w[0] - 7, w[1] - 24, w[0] - 7, w[1] + 16), fill=accent, width=2)
-
-    for joint in ("elbow_left", "elbow_right", "wrist_left", "wrist_right",
-                  "knee_left", "knee_right", "hip", "neck"):
-        _joint(draw, points[joint], max(3, width * 0.42), ink, accent, template["joints"])
-    if "gloves" in template["extras"] or "wristband" in template["extras"]:
-        for side in ("left", "right"):
-            w = points[f"wrist_{side}"]
-            draw.ellipse((w[0] - 11, w[1] - 11, w[0] + 11, w[1] + 11),
-                         fill=accent if "wristband" in template["extras"] else template["panel"],
-                         outline=ink, width=3)
-
-    _head(draw, points, template, emotion)
+    # Head is a clean circle, independent of old head variants and accessories.
+    outline_width = max(2, round(thickness*0.40))
+    draw.ellipse((center[0]-head_radius, center[1]-head_radius,
+                  center[0]+head_radius, center[1]+head_radius),
+                 fill=template["paper"], outline=ink, width=outline_width)
+    # Minimal expressive face, with symmetric eyes and subtle smile.
+    eye_y = center[1]-head_radius*0.08
+    eye_r = max(1.5, head_radius*0.055)
+    for sign in (-1, 1):
+        eye_x = center[0]+sign*head_radius*0.31
+        draw.ellipse((eye_x-eye_r, eye_y-eye_r, eye_x+eye_r, eye_y+eye_r), fill=ink)
+    mouth_box = (center[0]-head_radius*0.27, center[1]+head_radius*0.04,
+                 center[0]+head_radius*0.27, center[1]+head_radius*0.40)
+    draw.arc(mouth_box, 5, 175, fill=ink, width=max(2, outline_width-1))
     return template
 
 
