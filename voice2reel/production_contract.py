@@ -27,7 +27,9 @@ class ProductionPlan(Strict):
 
     @model_validator(mode="after")
     def limits(self):
-        if self.width * 16 != self.height * 9:\n            raise ValueError("Video aspect ratio must be 9:16")\n        if sum(s.seconds for s in self.shots) > 60:
+        if self.width * 16 != self.height * 9:
+            raise ValueError("Video aspect ratio must be 9:16")
+        if sum(s.seconds for s in self.shots) > 60:
             raise ValueError("Total duration must be <= 60 seconds")
         return self
 
@@ -53,5 +55,6 @@ def qwen_instruction(idea, character_id):
         "Prefer 3-6 shots and total duration 10-60 seconds. "
         "JSON schema: " + __import__("json").dumps(
             ProductionPlan.model_json_schema(), ensure_ascii=False
-        ) + "\nIdea: " + idea
+        ) + "
+Idea: " + idea
     )
