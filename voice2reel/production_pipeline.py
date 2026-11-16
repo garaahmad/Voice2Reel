@@ -55,6 +55,10 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                     (270 + 205 * camera_scale) * scale + drift,
                     (780 + (camera_scale - 1) * 60) * scale,
                 )
+                if shot.objects:
+                    # Reserve right-side space for props; keep the character legible.
+                    actor_box = (actor_box[0] - 85 * scale, actor_box[1] + 65 * scale,
+                                 actor_box[2] - 85 * scale, actor_box[3] - 35 * scale)
                 points = pose_points(shot.gesture, phase, width, height,
                                      actor_box=actor_box)
                 # Blend first/last pose toward idle to avoid gesture popping.
