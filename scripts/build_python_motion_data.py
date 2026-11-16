@@ -141,11 +141,17 @@ def make_row(index):
     kind = KINDS[(index // 3) % len(KINDS)]
     title = f"Motion lesson {index + 1}"
     subtitle = f"{topic.title()} / {duration}s"
-    code = SOURCE.format(fps=fps, duration=duration, background=bg,
-                         foreground=fg, accent=accent, kind=kind,
-                         title=title, subtitle=subtitle,
-                         easing=("x * x * (3 - 2 * x)" if easing == "smoothstep"
-                                 else "x * x * x * (x * (x * 6 - 15) + 10)"))
+    values = {
+        "fps": fps, "duration": duration, "background": bg,
+        "foreground": fg, "accent": accent, "kind": kind,
+        "title": repr(title), "subtitle": repr(subtitle),
+        "easing": ("x * x * (3 - 2 * x)" if easing == "smoothstep"
+                   else "x * x * x * (x * (x * 6 - 15) + 10)"),
+    }
+    code = SOURCE
+    for key, value in values.items():
+        token = "{"+key+"}"
+        code = code.replace(token, str(value))
     ast.parse(code)
     compile(code, f"motion_{index:04d}.py", "exec")
     prompt = (
