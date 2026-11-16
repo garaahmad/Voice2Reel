@@ -49,12 +49,52 @@ def split_for(topic):
     value = int(hashlib.sha256(topic.encode()).hexdigest()[:8], 16) % 20
     return "test" if value == 0 else "validation" if value == 1 else "train"
 
+STORY_AR = {
+    "hook": ("تخيّل إن مشروعك توقف فجأة بسبب {topic}.", "think", "close"),
+    "problem": ("المشكلة الشائعة في {topic} هي تجاهل الخطوات الأساسية.", "point", "medium"),
+    "explain": ("الفكرة الأساسية: قسّم {topic} إلى خطوات واضحة.", "explain", "wide"),
+    "example": ("خلينا نجرّب مثال عملي صغير في {topic}.", "present", "medium"),
+    "compare": ("قارن الحل العشوائي مع طريقة منظمة في {topic}.", "point", "wide"),
+    "warning": ("انتبه: التسرع في {topic} ممكن يسبب أخطاء.", "think", "close"),
+    "result": ("هيك بتوصل لنتيجة أوضح باستخدام {topic}.", "celebrate", "medium"),
+    "cta": ("جرّب الفكرة بنفسك وشارك شو تعلمت.", "wave", "medium"),
+}
+STORY_EN = {
+    "hook": ("Imagine your project suddenly failing because of {topic}.", "think", "close"),
+    "problem": ("A common {topic} problem is skipping the fundamentals.", "point", "medium"),
+    "explain": ("The key idea is to break {topic} into clear steps.", "explain", "wide"),
+    "example": ("Let's walk through a small practical {topic} example.", "present", "medium"),
+    "compare": ("Compare a rushed approach with a structured {topic} solution.", "point", "wide"),
+    "warning": ("Watch out: rushing {topic} can introduce mistakes.", "think", "close"),
+    "result": ("Now you can get clearer results with {topic}.", "celebrate", "medium"),
+    "cta": ("Try it in your own project and share what you learned.", "wave", "medium"),
+}
+STORY_AR_CAPTIONS = {
+    "hook": "ليش الموضوع مهم؟", "problem": "وين المشكلة؟",
+    "explain": "الفكرة ببساطة", "example": "مثال عملي",
+    "compare": "قارن الحلول", "warning": "انتبه لهذا الخطأ",
+    "result": "النتيجة", "cta": "دورك تجرّب",
+}
+STORY_EN_CAPTIONS = {
+    "hook": "Why it matters", "problem": "The problem",
+    "explain": "Core idea", "example": "Practical example",
+    "compare": "Compare approaches", "warning": "Common pitfall",
+    "result": "The result", "cta": "Your turn",
+}
+STORY_STRUCTURES = (
+    ("hook", "problem", "explain", "example", "result", "cta"),
+    ("hook", "warning", "explain", "example", "result"),
+    ("problem", "compare", "example", "result", "cta"),
+    ("hook", "explain", "example", "warning", "result"),
+    ("problem", "explain", "compare", "example", "result", "cta"),
+)
+
 def generate(index, seed):
     rng = random.Random(f"{seed}:{index}")
     topic = TOPICS[index % len(TOPICS)]
     lang = LANGUAGES[(index // len(TOPICS)) % 2]
     phrases = AR if lang == "ar" else EN
-    shots = rng.randint(3, 8)
+    structure = rng.choice(STORY_STRUCTURES)\n    shots = len(structure)
     width, height = rng.choice(FRAMINGS)
     idea = (
         f"Create a {shots}-shot {'Arabic' if lang == 'ar' else 'English'} "
@@ -73,8 +113,8 @@ def generate(index, seed):
             "caption=" + json.dumps(caption, ensure_ascii=False),
             "narration=" + json.dumps(narration, ensure_ascii=False),
             f"seconds={seconds}",
-            "gesture=" + json.dumps(rng.choice(GESTURES)),
-            "camera=" + json.dumps(rng.choice(CAMERAS)),
+            "gesture=" + json.dumps(gesture),
+            "camera=" + json.dumps(camera),
             "transition=" + json.dumps(rng.choice(TRANSITIONS)),
         ]) + ")")
     response = "\n".join(code)
@@ -88,7 +128,7 @@ def generate(index, seed):
         ],
         "metadata": {
             "topic": topic, "language": lang, "shot_count": shots,
-            "generator_seed": seed, "quality": "synthetic_validated_not_artist_reviewed",
+            "generator_seed": seed, "story_structure": structure,\n            "quality": "synthetic_semantic_choreography_not_artist_reviewed",
             "character_policy": "external_locked_template",
         },
     }
