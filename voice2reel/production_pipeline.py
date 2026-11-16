@@ -8,8 +8,8 @@ import math
 import subprocess
 from pathlib import Path
 
-from PIL import Image, ImageDraw
-from voice2reel.character_templates import draw_character, get_template, load_lock, pose_points
+from PIL import Image, ImageDraw, ImageFont
+from voice2reel.character_templates import FONT_PATH, draw_character, get_template, load_lock, pose_points
 from voice2reel.production_contract import ProductionPlan
 
 def ease(t):
