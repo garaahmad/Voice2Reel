@@ -30,6 +30,9 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                                          codec="libx264", quality=8,
                                          macro_block_size=1)
     writer.send(None)
+    from voice2reel.text_layout import draw_text
+    font = (ImageFont.truetype(str(FONT_PATH), 26)
+            if FONT_PATH.is_file() else ImageFont.load_default())
     try:
         for shot in plan.shots:
             frames = round(shot.seconds * fps)
@@ -49,11 +52,11 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                           for key, pt in points.items()}
                 draw_character(draw, points, template_id, phase=phase)
                 # Captions are authored and validated; render with repo's Arabic-aware helper.
-                from voice2reel.text_layout import draw_text
                 draw.rounded_rectangle((25, 790, 515, 905), radius=20,
                                        fill=template["panel"])
-                draw_text(draw, shot.caption, (270, 840), font_size=26,
-                          fill=template["ink"], anchor="mm", max_width=455)
+                draw_text(draw, (270, 840), shot.caption, font,
+                          direction="rtl" if any("\\u0600" <= ch <= "\\u06ff" for ch in shot.caption) else "ltr",
+                          fill=template["ink"], anchor="mm")
                 writer.send(im.tobytes())
     finally:
         writer.close()
