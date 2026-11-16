@@ -44,8 +44,8 @@ BACKGROUND = "{background}"
 FOREGROUND = "{foreground}"
 ACCENT = "{accent}"
 KIND = "{kind}"
-TITLE = {title!r}
-SUBTITLE = {subtitle!r}
+TITLE = {title}
+SUBTITLE = {subtitle}
 
 def clamp01(x):
     return max(0.0, min(1.0, x))
