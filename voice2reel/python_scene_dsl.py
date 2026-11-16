@@ -5,6 +5,7 @@ Only one top-level scene() call and 1..20 shot() calls are accepted.
 Character identity is supplied exclusively by the external lock.
 """
 import ast
+import json
 from voice2reel.production_contract import ProductionPlan
 
 ALLOWED = {"scene", "shot"}
@@ -33,13 +34,21 @@ def parse_python_scene(source):
         if index == 0:
             data.update(values)
         else:
+            if "objects" in values:
+                if not isinstance(values["objects"], str) or len(values["objects"]) > 2000:
+                    raise ValueError("objects must be a short JSON string")
+                values["objects"] = json.loads(values["objects"])
             data["shots"].append(values)
     return ProductionPlan.model_validate(data)
 
 PYTHON_SYSTEM_PROMPT = """Generate ONLY a Python scene DSL script, never raw Python.
-Allowed statements: scene(title="...", fps=30, width=540, height=960)
+Allowed statements: scene(title="...", fps=30, width=1080, height=1920)
 and shot(caption="...", narration="...", seconds=3.0, gesture="wave",
-camera="medium", transition="fade").
+camera="medium", transition="fade", objects='[{"kind":"router","animation":"pop_in","x":0.72,"y":0.42}]').
+Objects are an optional JSON-encoded STRING literal, maximum 6 per shot.
+Kinds: router, ethernet_cable, wifi_signal, laptop, phone, server, cloud.
+Animations: pop_in, draw, pulse, slide_in, static.
+Coordinates x/y are normalized 0..1; start/end are seconds within the shot.
 Exactly one scene() then 1..20 shot() calls. No imports, loops, expressions,
 attributes, function definitions, variables, files or arbitrary Python.
 Gestures: idle, present, point, wave, think, explain, celebrate, step.
