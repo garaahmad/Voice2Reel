@@ -46,7 +46,7 @@ LANGUAGES = ("ar", "en")
 
 def split_for(topic):
     # Entire topics are held out. No topic appears in more than one split.
-    value = int(hashlib.sha256(topic.encode()).hexdigest()[:8], 16) % 20
+    value = TOPICS.index(topic) % 20
     return "test" if value == 0 else "validation" if value == 1 else "train"
 
 STORY_AR = {
