@@ -64,6 +64,31 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                 points = {key: (idle[key][0] * (1 - blend) + pt[0] * blend,
                                 idle[key][1] * (1 - blend) + pt[1] * blend)
                           for key, pt in points.items()}
+                # Point at a visible prop using the character's actual arm joints.
+                # The character stays in the left visual column to avoid covering props.
+                if shot.objects and shot.gesture in ("point", "present", "explain"):
+                    visible = [obj for obj in shot.objects
+                               if obj.start <= phase * shot.seconds < obj.end]
+                    if visible:
+                        target = visible[0]
+                        shoulder = points["shoulder_right"]
+                        wrist = (target.x * width - 45 * scale,
+                                 target.y * height)
+                        # Keep the reach plausible and avoid dislocating the arm.
+                        vx, vy = wrist[0] - shoulder[0], wrist[1] - shoulder[1]
+                        distance = math.hypot(vx, vy)
+                        reach = min(160 * scale, distance)
+                        if distance > 0:
+                            wrist = (shoulder[0] + vx / distance * reach,
+                                     shoulder[1] + vy / distance * reach)
+                            elbow = (shoulder[0] + (wrist[0] - shoulder[0]) * 0.55,
+                                     shoulder[1] + (wrist[1] - shoulder[1]) * 0.45
+                                     + 18 * scale)
+                            amount = ease(min(1.0, max(0.0, phase * 5)))
+                            for joint, desired in (("elbow_right", elbow), ("wrist_right", wrist)):
+                                old = points[joint]
+                                points[joint] = (old[0] * (1 - amount) + desired[0] * amount,
+                                                 old[1] * (1 - amount) + desired[1] * amount)
                 draw_character(draw, points, template_id, phase=phase)
                 draw_objects(im, shot.objects, shot.seconds, phase, template["accent"], template["ink"])
                 # Captions are authored and validated; render with repo's Arabic-aware helper.
