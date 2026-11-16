@@ -26,36 +26,49 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
     output.parent.mkdir(parents=True, exist_ok=True)
     silent = output.with_name(output.stem + ".silent.mp4")
     fps = plan.fps
-    writer = imageio_ffmpeg.write_frames(str(silent), (540, 960), fps=fps,
+    width, height = plan.width, plan.height
+    scale = width / 540
+    writer = imageio_ffmpeg.write_frames(str(silent), (width, height), fps=fps,
                                          codec="libx264", quality=8,
                                          macro_block_size=1)
     writer.send(None)
     from voice2reel.text_layout import draw_text
-    font = (ImageFont.truetype(str(FONT_PATH), 26)
+    font = (ImageFont.truetype(str(FONT_PATH), round(26 * scale))
             if FONT_PATH.is_file() else ImageFont.load_default())
     try:
         for shot in plan.shots:
             frames = round(shot.seconds * fps)
             for index in range(frames):
                 phase = index / max(frames, 1)
-                im = Image.new("RGB", (540, 960), template["paper"])
+                im = Image.new("RGB", (width, height), template["paper"])
                 draw = ImageDraw.Draw(im)
                 # Motion is smooth in absolute time; template stays locked.
-                points = pose_points(shot.gesture, phase, 540, 960,
-                                     actor_box=(65, 165, 475, 780))
+                # Eased, continuous gesture motion with subtle breathing and weight shift.
+                motion = ease(phase / 0.22) if phase < 0.22 else (
+                    1.0 if phase < 0.78 else ease((1.0 - phase) / 0.22))
+                camera_scale = {"wide": 0.88, "medium": 1.0, "close": 1.18}[shot.camera]
+                drift = math.sin(2 * math.pi * phase) * 5 * scale
+                actor_box = (
+                    (270 - 205 * camera_scale) * scale + drift,
+                    (165 - (camera_scale - 1) * 140) * scale,
+                    (270 + 205 * camera_scale) * scale + drift,
+                    (780 + (camera_scale - 1) * 60) * scale,
+                )
+                points = pose_points(shot.gesture, phase, width, height,
+                                     actor_box=actor_box)
                 # Blend first/last pose toward idle to avoid gesture popping.
-                blend = ease(min(1, phase * 5, (1 - phase) * 5))
-                idle = pose_points("idle", phase, 540, 960,
-                                   actor_box=(65, 165, 475, 780))
+                blend = motion
+                idle = pose_points("idle", phase, width, height,
+                                   actor_box=actor_box)
                 points = {key: (idle[key][0] * (1 - blend) + pt[0] * blend,
                                 idle[key][1] * (1 - blend) + pt[1] * blend)
                           for key, pt in points.items()}
                 draw_character(draw, points, template_id, phase=phase)
                 # Captions are authored and validated; render with repo's Arabic-aware helper.
-                draw.rounded_rectangle((25, 790, 515, 905), radius=20,
+                draw.rounded_rectangle(tuple(round(v * scale) for v in (25, 790, 515, 905)), radius=round(20 * scale),
                                        fill=template["panel"])
-                draw_text(draw, (270, 840), shot.caption, font,
-                          direction="rtl" if any("\\u0600" <= ch <= "\\u06ff" for ch in shot.caption) else "ltr",
+                draw_text(draw, (round(270 * scale), round(840 * scale)), shot.caption, font,
+                          direction="rtl" if any("\u0600" <= ch <= "\u06ff" for ch in shot.caption) else "ltr",
                           fill=template["ink"], anchor="mm")
                 writer.send(im.tobytes())
     finally:
