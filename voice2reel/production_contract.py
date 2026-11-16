@@ -9,7 +9,25 @@ from voice2reel.character_templates import TEMPLATE_IDS, POSES
 class Strict(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
+class SceneObject(Strict):
+    """A renderer-owned illustration, never a URL or executable asset path."""
+    kind: Literal["router", "ethernet_cable", "wifi_signal", "laptop", "phone", "server", "cloud"]
+    animation: Literal["pop_in", "draw", "pulse", "slide_in", "static"] = "pop_in"
+    x: float = Field(default=0.72, ge=0.08, le=0.92)
+    y: float = Field(default=0.42, ge=0.12, le=0.78)
+    scale: float = Field(default=1.0, ge=0.3, le=1.7)
+    start: float = Field(default=0.0, ge=0, le=15)
+    end: float = Field(default=15.0, ge=0, le=15)
+
+    @model_validator(mode="after")
+    def valid_timing(self):
+        if self.end <= self.start:
+            raise ValueError("Object end must be after start")
+        return self
+
+
 class Shot(Strict):
+    objects: list[SceneObject] = Field(default_factory=list, max_length=6)
     caption: str = Field(min_length=1, max_length=100)
     narration: str = Field(min_length=1, max_length=600)
     seconds: float = Field(ge=1, le=15, strict=False)
