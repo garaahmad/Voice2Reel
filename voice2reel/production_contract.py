@@ -12,7 +12,7 @@ class Strict(BaseModel):
 class Shot(Strict):
     caption: str = Field(min_length=1, max_length=100)
     narration: str = Field(min_length=1, max_length=600)
-    seconds: float = Field(ge=1, le=15)
+    seconds: float = Field(ge=1, le=15, strict=False)
     gesture: Literal["idle", "present", "point", "wave", "think", "explain", "celebrate", "step"]
     camera: Literal["wide", "medium", "close"] = "medium"
     transition: Literal["cut", "fade"] = "fade"
@@ -27,7 +27,7 @@ class ProductionPlan(Strict):
 
     @model_validator(mode="after")
     def limits(self):
-        if sum(s.seconds for s in self.shots) > 60:
+        if self.width * 16 != self.height * 9:\n            raise ValueError("Video aspect ratio must be 9:16")\n        if sum(s.seconds for s in self.shots) > 60:
             raise ValueError("Total duration must be <= 60 seconds")
         return self
 
