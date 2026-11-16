@@ -55,6 +55,5 @@ def qwen_instruction(idea, character_id):
         "Prefer 3-6 shots and total duration 10-60 seconds. "
         "JSON schema: " + __import__("json").dumps(
             ProductionPlan.model_json_schema(), ensure_ascii=False
-        ) + "
-Idea: " + idea
+        ) + "\nIdea: " + idea
     )
