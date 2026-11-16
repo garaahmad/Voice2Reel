@@ -91,10 +91,10 @@ POSES = tuple(POSE_OFFSETS)
 TEMPLATES = (
     {
         "id": "classic", "name_ar": "الكلاسيكي", "name_en": "Classic",
-        "description": "خطوط رفيعة، بيريه وقفازات على ورق فاتح",
+        "description": "ستيكمان نظيف بدون قبعة أو قفازات، بخطوط ناعمة",
         "paper": "#f3f2ec", "ink": "#172023", "accent": "#e34d3e",
         "panel": "#fffef8", "stroke": 9, "head": "circle", "body": "line",
-        "joints": "dot", "face": "eyes", "extras": ("beret", "gloves"),
+        "joints": "none", "face": "eyes", "extras": (),
     },
     {
         "id": "bold", "name_ar": "العريض", "name_en": "Bold",
@@ -203,6 +203,8 @@ def pose_points(pose="present", phase=0.0, width=360, height=520, actor_box=None
         actor_box = (width * 0.10, height * 0.08, width * 0.90, height * 0.88)
     x0, y0, x1, y1 = actor_box
     sway = math.sin(2 * math.pi * phase)
+    # Small continuous motion; keep head and torso aligned to avoid joint tearing.
+    breathe = 0.004 * math.sin(2 * math.pi * phase)
     points = {}
     for joint, (nx, ny) in BASE_POSE.items():
         dx, dy = POSE_OFFSETS[pose].get(joint, (0.0, 0.0))
@@ -212,6 +214,8 @@ def pose_points(pose="present", phase=0.0, width=360, height=520, actor_box=None
             dy += 0.02 * abs(sway)
         if pose == "step" and joint.startswith(("knee_", "ankle_", "foot_")):
             dy += 0.01 * sway
+        if joint in ("neck", "head_center", "head_top", "head_bottom", "shoulder_left", "shoulder_right"):
+            dy += breathe
         points[joint] = (x0 + (nx + dx) * (x1 - x0), y0 + (ny + dy) * (y1 - y0))
     return points
 
@@ -260,6 +264,11 @@ def _segment(draw, start, end, width, ink, accent, body):
                      fill=ink)
         return
     draw.line((*a, *b), fill=ink, width=width, joint="curve")
+    # Rounded endpoints hide gaps between connected segments.
+    if body == "line":
+        radius = width / 2
+        for cx, cy in (a, b):
+            draw.ellipse((cx-radius, cy-radius, cx+radius, cy+radius), fill=ink)
     if body == "ribbon":
         draw.line((*a, *b), fill=accent, width=max(2, width // 3))
 
