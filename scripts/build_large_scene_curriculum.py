@@ -104,11 +104,14 @@ def generate(index, seed):
         f"Variation ID {index}."
     )
     code = [f"scene(title={json.dumps(topic, ensure_ascii=False)}, fps={rng.choice((24, 30))}, width={width}, height={height})"]
-    for j in range(shots):
-        text = phrases[(j + index // 17) % len(phrases)].format(topic=topic)
-        caption = (f"{j + 1}. {topic}" if lang == "en" else f"{j + 1}. {topic}")
-        narration = text + (f" — {j + 1}" if lang == "ar" else f", part {j + 1}.")
-        seconds = round(rng.uniform(2.5, 7.5), 2)
+    story = STORY_AR if lang == "ar" else STORY_EN
+    captions = STORY_AR_CAPTIONS if lang == "ar" else STORY_EN_CAPTIONS
+    for j, beat in enumerate(structure):
+        text, gesture, camera = story[beat]
+        caption = captions[beat]
+        narration = text.format(topic=topic)
+        word_count = len(narration.split())
+        seconds = round(min(12.0, max(2.5, word_count / (2.5 if lang == "en" else 2.2) + 0.8)), 2)
         code.append("shot(" + ", ".join([
             "caption=" + json.dumps(caption, ensure_ascii=False),
             "narration=" + json.dumps(narration, ensure_ascii=False),
