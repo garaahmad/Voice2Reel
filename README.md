@@ -204,6 +204,7 @@ The repository retains training and voice experiments alongside the current pres
 | [05_quality_loop](notebooks/05_quality_loop.ipynb) | Measured v2 quality loop: CPU gate + GPU QLoRA cycles |
 | [06_stickman_generator](notebooks/06_stickman_generator.ipynb) | Stickman drawing corpus + CPU/MLP demo pipeline |
 | [07_stickman_full_production](notebooks/07_stickman_full_production.ipynb) | Full Stickman production studio: train once → Qwen content → silent video → voice → mux |
+| [08_character_lab](notebooks/08_character_lab.ipynb) | 12 character choices → PNG preview → explicit lock → CPU compositional motion training → silent MP4; optional Qwen before/after evaluation ([measured results and limits](docs/CHARACTER_LAB.md)) |
 
 Older 1.5B adapters are incompatible with the current Qwen3 4B writer. No newly trained weights are shipped. Realistic-video notebook 03 and earlier motion studies are historical experiments, separate from the current presenter workflow.
 
