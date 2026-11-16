@@ -433,6 +433,10 @@ def draw_character(draw, points, template_id="classic", emotion="happy", phase=0
     arm_thickness = max(3, round(thickness*0.78))
     leg_thickness = max(3, round(thickness*0.92))
 
+    # Connect the head to the shoulders with a short, rounded neck.
+    neck_start = (center[0], center[1]+head_radius*0.92)
+    _smooth_limb(draw, neck_start, shoulder, thickness*0.72, ink)
+
     # A restrained accent shirt makes all themes feel like one designed series.
     torso_top = (shoulder[0], shoulder[1]+body_height*0.02)
     torso_bottom = (hip[0], hip[1]-body_height*0.02)
