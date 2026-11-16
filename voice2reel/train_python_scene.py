@@ -38,13 +38,13 @@ def main():
     p.add_argument("--train", default="datasets/python_scene/train.jsonl")
     p.add_argument("--validation", default="datasets/python_scene/validation.jsonl")
     p.add_argument("--output", default="outputs/qwen_python_scene")
-    p.add_argument("--epochs", type=int, default=3)
+    p.add_argument("--epochs", type=int, default=3)\n    p.add_argument("--patience", type=int, default=2)\n    p.add_argument("--max-steps", type=int, default=-1)
     p.add_argument("--max-length", type=int, default=2048)
     args = p.parse_args()
     import torch
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA GPU required for QLoRA")
-    from transformers import (AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig,
+    from transformers import (EarlyStoppingCallback, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig,
                               Trainer, TrainingArguments, set_seed)
     from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
     from voice2reel.scriptwriter.data import AnswerCollator
@@ -77,7 +77,7 @@ def main():
         eval_dataset=[encode(r, tokenizer, args.max_length) for r in validation],
         data_collator=AnswerCollator(tokenizer.pad_token_id),
         args=TrainingArguments(
-            output_dir=str(output), num_train_epochs=args.epochs,
+            output_dir=str(output), num_train_epochs=args.epochs, max_steps=args.max_steps,
             per_device_train_batch_size=1, per_device_eval_batch_size=1,
             gradient_accumulation_steps=8, learning_rate=1e-4,
             warmup_ratio=0.1, lr_scheduler_type="cosine",
