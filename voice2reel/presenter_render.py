@@ -19,7 +19,7 @@ from voice2reel.motion_preview import ease, joint, mix
 from voice2reel.render import find_font, validate_timeline, wrap_text
 from voice2reel.text_layout import draw_text, text_length
 
-VERSION = "presenter-5-clean-face-arms-motion-arabic"
+VERSION = "presenter-6-minimal-smooth-stickman"
 PROFILES = {"fast": (540, 24, "ultrafast"), "quality": (720, 30, "veryfast")}
 INK, RED = "#172023", "#e34d3e"
 
@@ -44,106 +44,54 @@ def rounded_line(draw, points, width, color=INK):
 
 @lru_cache(maxsize=192)
 def face(emotion, mouth, blink, look=0, tilt=0):
-    """Original expressive vector face, rendered at 2x and shared between frames."""
+    """Minimal, antialiased presenter face with a small signature red beret."""
     im = Image.new("RGBA", (440, 500))
     d = ImageDraw.Draw(im)
-
-    def ellipse(box, fill, outline=None, width=1):
-        d.ellipse(tuple(round(v * 2) for v in box), fill=fill, outline=outline, width=round(width * 2))
-
-    def path(points, fill, outline=None, width=1):
-        pts = [(round(x * 2), round(y * 2)) for x, y in points]
-        d.polygon(pts, fill=fill)
-        if outline:
-            d.line(pts + [pts[0]], fill=outline, width=round(width * 2), joint="curve")
-
-    def line(points, width=3, color=INK):
-        d.line(
-            [(round(x * 2), round(y * 2)) for x, y in points],
-            fill=color,
-            width=round(width * 2),
-            joint="curve",
-        )
-
-    # A clean circular face, with just enough edge shading to separate it from paper.
-    ellipse((35, 58, 193, 219), "#cdd6d6", INK, 4.5)
-    ellipse((40, 62, 190, 214), "#fffef9")
-    ellipse((43, 74, 57, 174), "#eef1eb")
+    def xy(box):
+        return tuple(round(v * 2) for v in box)
+    # One clean head silhouette; avoid overlapping shading and decorative polygons.
+    d.ellipse(xy((38, 61, 190, 213)), fill="#fffef9", outline=INK, width=9)
     for ex in (89, 143):
         if blink:
-            line(curve([(ex - 14, 141), (ex - 6, 148), (ex + 8, 148), (ex + 15, 139)]), 3.3)
+            rounded_line(d, xy_points([(ex - 11, 140), (ex + 11, 140)]), 5)
         else:
-            ellipse((ex - 16, 119, ex + 16, 157), "#fff", INK, 2.2)
-            shift = 3 if emotion == "thinking" else 0
-            ellipse((ex - 6 + look, 127 - shift, ex + 8 + look, 149 - shift), INK)
-            ellipse((ex - 3 + look, 129 - shift, ex + 2 + look, 135 - shift), "#fff")
-        y = 108 if emotion in ("surprised", "thinking") else 113
-        if emotion == "concerned":
-            pts = [
-                (ex - 15, y + 2 if ex < 110 else y - 6),
-                (ex, y - 7),
-                (ex + 15, y - 6 if ex < 110 else y + 2),
-            ]
-        elif emotion == "thinking" and ex > 110:
-            pts = curve([(ex - 15, y + 3), (ex - 2, y - 8), (ex + 8, y - 6), (ex + 15, y - 2)])
-        else:
-            pts = curve([(ex - 15, y + 2), (ex - 8, y - 6), (ex + 7, y - 6), (ex + 15, y + 2)])
-        line(pts, 4)
-    # Closed mouth during pauses, even when the expression is surprised.
-    if mouth == 3:
-        ellipse((105, 175, 128, 198), INK)
-    elif mouth == 2:
-        path(
-            curve([(91, 175), (106, 182), (126, 182), (140, 173)])
-            + curve([(140, 173), (134, 205), (102, 207), (91, 175)])[1:],
-            INK,
-        )
-        path([(97, 179), (134, 179), (130, 186), (102, 186)], "#fffef9")
+            d.ellipse(xy((ex - 9, 129, ex + 9, 151)), fill="#fffef9", outline=INK, width=4)
+            d.ellipse(xy((ex - 3 + look, 135, ex + 4 + look, 144)), fill=INK)
+    if mouth >= 2 or (emotion == "surprised" and mouth):
+        d.ellipse(xy((106, 173, 125, 194)), fill=INK)
     elif mouth == 1:
-        ellipse((101, 179, 132, 193), INK)
+        d.ellipse(xy((108, 180, 123, 188)), fill=INK)
     elif emotion == "concerned":
-        line(curve([(100, 188), (109, 180), (125, 180), (135, 188)]), 2.7)
-    elif emotion == "thinking":
-        line(curve([(105, 186), (113, 189), (123, 184), (132, 185)]), 2.7)
-    elif emotion == "surprised":
-        line(curve([(106, 187), (114, 184), (122, 184), (130, 187)]), 2.7)
+        d.arc(xy((97, 178, 137, 203)), 190, 345, fill=INK, width=5)
     else:
-        line(curve([(96, 181), (108, 197), (129, 193), (139, 178)]), 2.7)
-    # A fitted, symmetric cap with one continuous crown and a clean band.
-    # No floating stem, overlapping brim, or detached decorative shapes.
-    hat = curve([(38, 96), (38, 27), (190, 27), (190, 96)])
-    hat += [(190, 105), (38, 105)]
-    path(hat, "#e84b3c", INK, 3)
-    band = curve([(38, 93), (85, 88), (145, 88), (190, 93)])
-    band += [(190, 105), (38, 105)]
-    path(band, "#c93e32", INK, 2)
+        d.arc(xy((96, 166, 139, 194)), 12, 168, fill=INK, width=5)
+    # A simple beret: one soft shape and a narrow brim.
+    cap = curve([(42, 95), (36, 35), (182, 35), (187, 94)], steps=30)
+    d.polygon(xy_points(cap + [(187, 101), (42, 101)]), fill=RED)
+    d.line(xy_points(cap), fill=INK, width=6, joint="curve")
+    rounded_line(d, xy_points([(45, 100), (183, 100)]), 7)
     if tilt:
         im = im.rotate(tilt, resample=Image.Resampling.BICUBIC, center=(220, 350))
     return im
 
 
+def xy_points(points):
+    return [(round(x * 2), round(y * 2)) for x, y in points]
+
+
 @lru_cache(maxsize=128)
 def glove(kind, angle):
+    """Small rounded hands instead of intricate fingers that alias in video."""
     im = Image.new("RGBA", (112, 132))
     d = ImageDraw.Draw(im)
-    d.ellipse((33, 43, 81, 98), fill=INK)
+    d.ellipse((37, 52, 75, 90), fill=INK)
     if kind == "point":
-        rounded_line(d, [(59, 61), (59, 17)], 15)
-        rounded_line(d, [(36, 68), (23, 84)], 14)
-        for x in (49, 64, 77):
-            rounded_line(d, [(x, 75), (x, 94)], 13)
+        rounded_line(d, [(56, 64), (56, 29)], 12)
     elif kind == "thumb":
-        rounded_line(d, [(38, 61), (28, 27)], 16)
-        for y in (60, 75, 88):
-            rounded_line(d, [(53, y), (81, y)], 14)
+        rounded_line(d, [(48, 66), (36, 41)], 12)
     elif kind == "open":
-        for x, y in [(36, 34), (50, 24), (65, 26), (79, 39)]:
-            rounded_line(d, [(x, 65), (x - 2, y)], 13)
-        rounded_line(d, [(37, 77), (20, 60)], 14)
-    else:
-        for x, y in [(38, 103), (52, 111), (66, 108), (78, 99)]:
-            rounded_line(d, [(x, 77), (x - 3, y)], 13)
-        rounded_line(d, [(37, 65), (21, 83)], 14)
+        rounded_line(d, [(46, 61), (37, 42)], 10)
+        rounded_line(d, [(65, 61), (74, 42)], 10)
     return im.rotate(angle, resample=Image.Resampling.BICUBIC, center=(56, 76), expand=False)
 
 
@@ -377,7 +325,7 @@ class PresenterRenderer:
         # Feet stay planted while hips and knees shift the weight. Separate shoulder anchors.
         d.ellipse((176, 1168, 506, 1212), fill="#223b3b20")
         for points in [[hip, (144, 746), (127, 834)], [hip, (198, 743), (214, 834)]]:
-            line(points, 14)
+            line(points, 12)
         for x, mirror in [(127, -1), (214, 1)]:
             shoe = [
                 (x - 10 * mirror, 825),
@@ -391,9 +339,9 @@ class PresenterRenderer:
             ]
             d.polygon([(round(px * 2), round(py * 2) - 500) for px, py in shoe], fill=INK)
         torso = curve([(164 + lean, 486 + breath), (164 + lean, 540 + breath), (167, 615), hip])
-        line(torso, 18)
+        line(torso, 16)
         shoulders = [(137 + lean, 516 + breath), (191 + lean, 516 + breath)]
-        line([shoulders[0], (164 + lean, 505 + breath), shoulders[1]], 15)
+        line([shoulders[0], (164 + lean, 505 + breath), shoulders[1]], 12)
         for side in [0, 1]:
             a, b = old[side], new[side]
             wrist = (mix(a[0], b[0], u), mix(a[1], b[1], u) + breath)
@@ -411,7 +359,7 @@ class PresenterRenderer:
             elbow, end = joint(shoulders[side], wrist, 64, 70, 1)
             # Draw the solved bones through the elbow. A cubic shortcut visibly
             # shortened the upper arm and made the limb look like rubber.
-            line([shoulders[side], elbow, end], 11)
+            line([shoulders[side], elbow, end], 10)
             kind = new[2 + side] if u > 0.5 else old[2 + side]
             angle = round(mix(old[4 + side], new[4 + side], u) / 5) * 5
             hand = glove(kind, angle)
