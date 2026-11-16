@@ -28,6 +28,8 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
     silent = output.with_name(output.stem + ".silent.mp4")
     fps = plan.fps
     width, height = plan.width, plan.height
+    if (width, height) != (1080, 1920):
+        raise ValueError(f"Instagram Reels export requires 1080x1920, got {width}x{height}")
     scale = width / 540
     writer = imageio_ffmpeg.write_frames(str(silent), (width, height), fps=fps,
                                          codec="libx264", quality=8,
@@ -43,6 +45,11 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                 phase = index / max(frames, 1)
                 im = Image.new("RGB", (width, height), template["paper"])
                 draw = ImageDraw.Draw(im)
+                # Subtle animated background lines and graphic accents.
+                for band in range(4):
+                    yy = int((160 + band * 220 + 12 * math.sin(phase * 2 * math.pi + band)) * scale)
+                    draw.line((int(24*scale), yy, int(516*scale), yy),
+                              fill=template["panel"], width=max(1, round(2*scale)))
                 # Motion is smooth in absolute time; template stays locked.
                 # Eased, continuous gesture motion with subtle breathing and weight shift.
                 motion = ease(phase / 0.22) if phase < 0.22 else (
@@ -106,6 +113,7 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
         writer.close()
     if voice is None and music is None:
         silent.replace(output)
+        verify_reels_video(output)
         return output
     if not 0 <= music_volume <= 0.5:
         raise ValueError("music_volume must be between 0 and 0.5")
@@ -139,7 +147,23 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                "-b:a", "192k", "-movflags", "+faststart", str(output)]
     subprocess.run(command, check=True, timeout=300)
     silent.unlink(missing_ok=True)
+    verify_reels_video(output)
     return output
+
+def verify_reels_video(path):
+    """Check encoded MP4 dimensions, not notebook preview size."""
+    import imageio_ffmpeg
+    proc = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-hide_banner",
+                           "-i", str(path)], capture_output=True, text=True)
+    import re
+    dimensions = re.search(r"Video:.*?\\b(\\d{3,5})x(\\d{3,5})\\b", proc.stderr)
+    if not dimensions:
+        raise RuntimeError("Could not verify encoded video dimensions")
+    actual = tuple(map(int, dimensions.groups()))
+    if actual != (1080, 1920):
+        raise RuntimeError(f"Incorrect Reels output dimensions: {actual}, expected 1080x1920")
+    print(f"✅ Verified Instagram Reels output: {actual[0]}x{actual[1]} (9:16)", flush=True)
+
 
 def main():
     p = argparse.ArgumentParser()
