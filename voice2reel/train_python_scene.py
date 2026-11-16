@@ -38,7 +38,9 @@ def main():
     p.add_argument("--train", default="datasets/python_scene/train.jsonl")
     p.add_argument("--validation", default="datasets/python_scene/validation.jsonl")
     p.add_argument("--output", default="outputs/qwen_python_scene")
-    p.add_argument("--epochs", type=int, default=3)\n    p.add_argument("--patience", type=int, default=2)\n    p.add_argument("--max-steps", type=int, default=-1)
+    p.add_argument("--epochs", type=int, default=3)
+    p.add_argument("--patience", type=int, default=2)
+    p.add_argument("--max-steps", type=int, default=-1)
     p.add_argument("--max-length", type=int, default=2048)
     args = p.parse_args()
     import torch
@@ -72,6 +74,7 @@ def main():
     if output.exists() and any(output.iterdir()):
         raise ValueError("Use a fresh output directory")
     trainer = Trainer(
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=args.patience)],
         model=model, processing_class=tokenizer,
         train_dataset=[encode(r, tokenizer, args.max_length) for r in train],
         eval_dataset=[encode(r, tokenizer, args.max_length) for r in validation],
