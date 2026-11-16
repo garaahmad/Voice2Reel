@@ -11,6 +11,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from voice2reel.character_templates import FONT_PATH, draw_character, get_template, load_lock, pose_points
 from voice2reel.production_contract import ProductionPlan
+from voice2reel.scene_objects import draw_objects
 
 def ease(t):
     t = max(0.0, min(1.0, t))
@@ -64,6 +65,7 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                                 idle[key][1] * (1 - blend) + pt[1] * blend)
                           for key, pt in points.items()}
                 draw_character(draw, points, template_id, phase=phase)
+                draw_objects(im, shot.objects, shot.seconds, phase, template["accent"], template["ink"])
                 # Captions are authored and validated; render with repo's Arabic-aware helper.
                 draw.rounded_rectangle(tuple(round(v * scale) for v in (25, 790, 515, 905)), radius=round(20 * scale),
                                        fill=template["panel"])
