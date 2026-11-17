@@ -36,17 +36,17 @@ JOINT_ORDER = (
 
 BASE_POSE = {
     "hip": (0.50, 0.62),
-    "shoulder_left": (0.38, 0.33),
-    "shoulder_right": (0.62, 0.33),
+    "shoulder_left": (0.455, 0.325),
+    "shoulder_right": (0.545, 0.325),
     "head_center": (0.50, 0.18),
     "head_top": (0.50, 0.075),
     "head_bottom": (0.50, 0.285),
     "neck": (0.50, 0.305),
     "torso_mid": (0.50, 0.47),
-    "elbow_left": (0.30, 0.46),
-    "elbow_right": (0.70, 0.46),
-    "wrist_left": (0.26, 0.58),
-    "wrist_right": (0.74, 0.58),
+    "elbow_left": (0.385, 0.435),
+    "elbow_right": (0.615, 0.435),
+    "wrist_left": (0.365, 0.555),
+    "wrist_right": (0.635, 0.555),
     "knee_left": (0.43, 0.76),
     "knee_right": (0.57, 0.76),
     "ankle_left": (0.43, 0.885),
@@ -59,11 +59,11 @@ BASE_POSE = {
 POSE_OFFSETS = {
     "idle": {},
     "present": {
-        "wrist_left": (-0.10, -0.13), "elbow_left": (-0.05, -0.07),
-        "wrist_right": (0.03, -0.02),
+        "wrist_left": (-0.035, -0.12), "elbow_left": (-0.025, -0.055),
+        "wrist_right": (0.01, -0.02),
     },
     "point": {
-        "wrist_right": (0.12, -0.12), "elbow_right": (0.07, -0.05),
+        "wrist_right": (0.075, -0.12), "elbow_right": (0.04, -0.05),
         "head_center": (0.015, 0.0), "head_top": (0.015, 0.0),
         "head_bottom": (0.015, 0.0), "neck": (0.015, 0.0),
     },
@@ -76,7 +76,7 @@ POSE_OFFSETS = {
         "head_bottom": (-0.025, 0.01), "neck": (-0.025, 0.01),
     },
     "explain": {
-        "wrist_left": (-0.06, -0.08), "wrist_right": (0.06, -0.08),
+        "wrist_left": (-0.035, -0.08), "wrist_right": (0.035, -0.08),
         "elbow_left": (-0.02, -0.03), "elbow_right": (0.02, -0.03),
     },
     "celebrate": {
@@ -476,20 +476,22 @@ def draw_character(draw, points, template_id="classic", emotion="happy", phase=0
         root = points[f"shoulder_{side}"]
         wrist = points[f"wrist_{side}"]
         original_elbow = points[f"elbow_{side}"]
-        upper = max(unit*0.40, math.dist(root, original_elbow))
-        lower = max(unit*0.39, math.dist(original_elbow, wrist))
-        dx, dy = wrist[0]-root[0], wrist[1]-root[1]
-        distance = math.hypot(dx, dy)
-        reach = (upper+lower)*0.95
-        if distance > reach:
-            wrist = (root[0]+dx*reach/distance, root[1]+dy*reach/distance)
-        elbow = _two_bone_joint(root, wrist, upper, lower,
-                                bend=-1 if side=="left" else 1)
+        # Use the authored elbow target rather than a free IK bend.
+        # Previous IK bent elbows outward, creating detached-looking arms.
+        # Keep shoulders close to the neck and elbows between shoulder/wrist.
+        elbow = original_elbow
+        max_side = unit * 0.64
+        wrist = (max(shoulder[0]-max_side,
+                     min(shoulder[0]+max_side, wrist[0])), wrist[1])
+        elbow = ((root[0] + elbow[0] + wrist[0]) / 3,
+                 elbow[1])
+        # Shoulder -> elbow -> hand with a continuous rounded silhouette.
         _soft_curve(draw, root,
-                    (root[0]+direction*unit*0.13, root[1]+unit*0.035),
+                    ((root[0]+elbow[0])/2,
+                     (root[1]+elbow[1])/2-unit*0.018),
                     elbow, arm_w, ink)
         _soft_curve(draw, elbow,
-                    ((elbow[0]+wrist[0])/2+direction*unit*0.025,
+                    ((elbow[0]+wrist[0])/2,
                      (elbow[1]+wrist[1])/2),
                     wrist, arm_w, ink)
 
