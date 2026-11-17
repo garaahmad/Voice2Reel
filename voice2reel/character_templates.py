@@ -415,86 +415,135 @@ def _two_bone_joint(root, target, upper, lower, bend=1):
             root[1] + uy*along + ux*offset*bend)
 
 
-def draw_character(draw, points, template_id="classic", emotion="happy", phase=0.0):
-    """Premium, consistent character silhouette for every visual theme.
+def _soft_curve(draw, start, control, end, width, color, steps=18):
+    """Anti-gap quadratic Bézier stroke with rounded caps."""
+    pts = []
+    for i in range(steps + 1):
+        t = i / steps
+        q = 1 - t
+        pts.append((q*q*start[0] + 2*q*t*control[0] + t*t*end[0],
+                    q*q*start[1] + 2*q*t*control[1] + t*t*end[1]))
+    draw.line(pts, fill=color, width=max(2, int(width)), joint="curve")
+    r = max(1, width / 2)
+    for x, y in (pts[0], pts[-1]):
+        draw.ellipse((x-r, y-r, x+r, y+r), fill=color)
 
-    Uses the supplied pose targets but reconstructs arms/legs with two-bone IK.
-    No hats, exposed joint dots, robotic plates or disconnected segments.
+
+def draw_character(draw, points, template_id="classic", emotion="happy", phase=0.0):
+    """Friendly hand-drawn mascot with smooth limbs, gloves and expressive face.
+
+    All geometry follows the existing pose targets so the animation system
+    remains compatible. Accessories and exposed skeleton joints are omitted.
     """
     template = get_template(template_id)
-    ink, accent = template["ink"], template["accent"]
+    ink = template["ink"]
+    accent = template["accent"]
+    paper = template["paper"]
     center = points["head_center"]
-    head_radius = max(8.0, abs(points["head_bottom"][1]-points["head_top"][1])/2)
-    shoulder_l, shoulder_r = points["shoulder_left"], points["shoulder_right"]
-    shoulder = ((shoulder_l[0]+shoulder_r[0])/2, (shoulder_l[1]+shoulder_r[1])/2)
     hip = points["hip"]
-    body_height = max(35.0, abs(hip[1]-shoulder[1]))
-    thickness = max(3, round(body_height*0.065))
-    arm_thickness = max(3, round(thickness*0.78))
-    leg_thickness = max(3, round(thickness*0.92))
+    shoulders = (points["shoulder_left"], points["shoulder_right"])
+    shoulder = ((shoulders[0][0]+shoulders[1][0])/2,
+                (shoulders[0][1]+shoulders[1][1])/2)
+    unit = max(1.0, abs(hip[1]-shoulder[1]))
+    # More generous head and deliberate silhouette, like a polished explainer mascot.
+    radius = max(12.0, abs(points["head_bottom"][1]-points["head_top"][1])*0.56)
+    body_w = max(4, int(unit*0.11))
+    arm_w = max(3, int(unit*0.077))
+    leg_w = max(4, int(unit*0.09))
 
-    # Connect the head to the shoulders with a short, rounded neck.
-    neck_start = (center[0], center[1]+head_radius*0.92)
-    _smooth_limb(draw, neck_start, shoulder, thickness*0.72, ink)
-
-    # A restrained accent shirt makes all themes feel like one designed series.
-    torso_top = (shoulder[0], shoulder[1]+body_height*0.02)
-    torso_bottom = (hip[0], hip[1]-body_height*0.02)
-    _smooth_limb(draw, torso_top, torso_bottom, thickness*1.25, ink)
-    _smooth_limb(draw, shoulder_l, shoulder_r, thickness*0.86, ink)
-    chest = (shoulder[0], shoulder[1]+body_height*0.23)
-    r = thickness*0.50
-    draw.ellipse((chest[0]-r, chest[1]-r, chest[0]+r, chest[1]+r), fill=accent)
-
-    for side in ("left", "right"):
-        root = points[f"shoulder_{side}"]
-        wrist_target = points[f"wrist_{side}"]
-        original_elbow = points[f"elbow_{side}"]
-        # Fit lengths to each character scale; preserve reachable targets.
-        arm_length = max(body_height*0.46,
-                         math.hypot(original_elbow[0]-root[0], original_elbow[1]-root[1]))
-        forearm_length = max(body_height*0.43,
-                             math.hypot(wrist_target[0]-original_elbow[0],
-                                        wrist_target[1]-original_elbow[1]))
-        dx, dy = wrist_target[0]-root[0], wrist_target[1]-root[1]
-        dist = math.hypot(dx, dy)
-        max_reach = (arm_length+forearm_length)*0.97
-        if dist > max_reach:
-            wrist_target = (root[0]+dx*max_reach/dist,
-                            root[1]+dy*max_reach/dist)
-        elbow = _two_bone_joint(root, wrist_target, arm_length, forearm_length,
-                                bend=-1 if side=="left" else 1)
-        _smooth_limb(draw, root, elbow, arm_thickness, ink)
-        _smooth_limb(draw, elbow, wrist_target, arm_thickness, ink)
-        # Small filled mitten rather than a disconnected circle.
-        hr = arm_thickness*0.68
-        draw.ellipse((wrist_target[0]-hr, wrist_target[1]-hr,
-                      wrist_target[0]+hr, wrist_target[1]+hr), fill=ink)
-
-        # Leg chains use one continuous silhouette with small natural feet.
+    # Feet and legs first, behind the torso. Curves soften the knee transitions.
+    for side, direction in (("left", -1), ("right", 1)):
         knee = points[f"knee_{side}"]
         ankle = points[f"ankle_{side}"]
-        foot = points[f"foot_{side}"]
-        _smooth_limb(draw, hip, knee, leg_thickness, ink)
-        _smooth_limb(draw, knee, ankle, leg_thickness, ink)
-        toe_direction = -1 if side=="left" else 1
-        toe = (ankle[0]+toe_direction*body_height*0.15, ankle[1]+body_height*0.025)
-        _smooth_limb(draw, ankle, toe, leg_thickness*0.78, ink)
+        foot = (ankle[0]+direction*unit*0.16, ankle[1]+unit*0.03)
+        _soft_curve(draw, hip,
+                    ((hip[0]+knee[0])/2+direction*unit*0.025,
+                     (hip[1]+knee[1])/2),
+                    knee, leg_w, ink)
+        _soft_curve(draw, knee,
+                    ((knee[0]+ankle[0])/2, (knee[1]+ankle[1])/2),
+                    ankle, leg_w, ink)
+        _soft_curve(draw, ankle,
+                    (ankle[0]+direction*unit*0.055, ankle[1]+unit*0.065),
+                    foot, leg_w+2, ink)
 
-    # Head is a clean circle, independent of old head variants and accessories.
-    outline_width = max(2, round(thickness*0.40))
-    draw.ellipse((center[0]-head_radius, center[1]-head_radius,
-                  center[0]+head_radius, center[1]+head_radius),
-                 fill=template["paper"], outline=ink, width=outline_width)
-    # Minimal expressive face, with symmetric eyes and subtle smile.
-    eye_y = center[1]-head_radius*0.08
-    eye_r = max(1.5, head_radius*0.055)
-    for sign in (-1, 1):
-        eye_x = center[0]+sign*head_radius*0.31
-        draw.ellipse((eye_x-eye_r, eye_y-eye_r, eye_x+eye_r, eye_y+eye_r), fill=ink)
-    mouth_box = (center[0]-head_radius*0.27, center[1]+head_radius*0.04,
-                 center[0]+head_radius*0.27, center[1]+head_radius*0.40)
-    draw.arc(mouth_box, 5, 175, fill=ink, width=max(2, outline_width-1))
+    # Smooth tapered-looking torso without shoulder bars or visible joint dots.
+    neck = (center[0], center[1]+radius*0.95)
+    _soft_curve(draw, neck, (shoulder[0], shoulder[1]+unit*0.16),
+                hip, body_w, ink)
+
+    for side, direction in (("left", -1), ("right", 1)):
+        root = points[f"shoulder_{side}"]
+        wrist = points[f"wrist_{side}"]
+        original_elbow = points[f"elbow_{side}"]
+        upper = max(unit*0.40, math.dist(root, original_elbow))
+        lower = max(unit*0.39, math.dist(original_elbow, wrist))
+        dx, dy = wrist[0]-root[0], wrist[1]-root[1]
+        distance = math.hypot(dx, dy)
+        reach = (upper+lower)*0.95
+        if distance > reach:
+            wrist = (root[0]+dx*reach/distance, root[1]+dy*reach/distance)
+        elbow = _two_bone_joint(root, wrist, upper, lower,
+                                bend=-1 if side=="left" else 1)
+        _soft_curve(draw, root,
+                    (root[0]+direction*unit*0.13, root[1]+unit*0.035),
+                    elbow, arm_w, ink)
+        _soft_curve(draw, elbow,
+                    ((elbow[0]+wrist[0])/2+direction*unit*0.025,
+                     (elbow[1]+wrist[1])/2),
+                    wrist, arm_w, ink)
+
+        # Rounded three-lobed cartoon hand, anchored at the wrist.
+        hand_r = max(3.5, arm_w*0.94)
+        hx, hy = wrist
+        draw.ellipse((hx-hand_r, hy-hand_r*0.75,
+                      hx+hand_r, hy+hand_r*1.15), fill=ink)
+        finger_y = hy+hand_r*0.8
+        for offset in (-0.52, 0, 0.52):
+            fx = hx+offset*hand_r
+            draw.ellipse((fx-hand_r*0.31, finger_y-hand_r*0.12,
+                          fx+hand_r*0.31, finger_y+hand_r*0.92), fill=ink)
+        thumb_x = hx-direction*hand_r*0.88
+        draw.ellipse((thumb_x-hand_r*0.40, hy+hand_r*0.1,
+                      thumb_x+hand_r*0.40, hy+hand_r*0.95), fill=ink)
+
+    # Large rounded head with soft offset highlight and thick clean outline.
+    outline = max(2, int(unit*0.038))
+    draw.ellipse((center[0]-radius, center[1]-radius,
+                  center[0]+radius, center[1]+radius),
+                 fill=paper, outline=ink, width=outline)
+    # Eyes: white sclera, dark pupil, tiny light catch.
+    eye_y = center[1]-radius*0.08
+    eye_r = radius*0.175
+    for direction in (-1, 1):
+        ex = center[0]+direction*radius*0.35
+        draw.ellipse((ex-eye_r, eye_y-eye_r*1.15,
+                      ex+eye_r, eye_y+eye_r*1.15),
+                     fill="#ffffff", outline=ink, width=max(2, outline//2))
+        pr = eye_r*0.43
+        px = ex+direction*eye_r*0.05
+        draw.ellipse((px-pr, eye_y-pr*0.75, px+pr, eye_y+pr*1.25), fill=ink)
+        sr = max(1.0, pr*0.29)
+        draw.ellipse((px-pr*0.30-sr, eye_y-pr*0.42-sr,
+                      px-pr*0.30+sr, eye_y-pr*0.42+sr), fill="#ffffff")
+        brow_y = eye_y-eye_r*1.68
+        draw.arc((ex-eye_r*0.90, brow_y-eye_r*0.20,
+                  ex+eye_r*0.90, brow_y+eye_r*0.55),
+                 195, 345, fill=ink, width=max(2, outline//2))
+
+    # Expression changes can be driven by the existing emotion argument.
+    if emotion == "surprised":
+        mr = radius*0.13
+        draw.ellipse((center[0]-mr, center[1]+radius*0.34-mr,
+                      center[0]+mr, center[1]+radius*0.34+mr), fill=ink)
+    elif emotion == "concerned":
+        draw.arc((center[0]-radius*0.24, center[1]+radius*0.33,
+                  center[0]+radius*0.24, center[1]+radius*0.62),
+                 190, 350, fill=ink, width=max(2, outline//2))
+    else:
+        draw.arc((center[0]-radius*0.27, center[1]+radius*0.11,
+                  center[0]+radius*0.27, center[1]+radius*0.53),
+                 5, 175, fill=ink, width=max(2, outline//2))
     return template
 
 
