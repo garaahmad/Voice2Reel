@@ -12,17 +12,27 @@ from PIL import Image, ImageDraw, ImageFont
 from voice2reel.character_templates import FONT_PATH, draw_character, get_template, load_lock, pose_points
 from voice2reel.production_contract import ProductionPlan
 from voice2reel.scene_objects import draw_objects
+from voice2reel.mascot_animator import MascotAnimator
+from voice2reel.mascot_renderer import draw_rig_character
 
 def ease(t):
     t = max(0.0, min(1.0, t))
     return t * t * (3 - 2 * t)
 
-def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12, mascot_png=None):
+def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12,
+           mascot_png=None, character_engine="rig"):
     import imageio_ffmpeg
     plan = ProductionPlan.model_validate(plan)
     lock = load_lock(lock_path)
     template_id = lock["template_id"]
-    template = get_template(template_id)
+    if character_engine not in ("rig", "legacy", "qwen_static"):
+        raise ValueError("character_engine must be rig, legacy, or qwen_static")
+    if character_engine == "qwen_static" and mascot_png is None:
+        raise ValueError("qwen_static requires --mascot-png")
+    if character_engine != "qwen_static" and mascot_png is not None:
+        raise ValueError("--mascot-png is only supported with qwen_static")
+    template = get_template("classic" if character_engine == "rig" else template_id)
+    animator = MascotAnimator() if character_engine == "rig" else None
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     silent = output.with_name(output.stem + ".silent.mp4")
@@ -31,7 +41,7 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12, m
     if (width, height) != (1080, 1920):
         raise ValueError(f"Instagram Reels export requires 1080x1920, got {width}x{height}")
     mascot = None
-    if mascot_png:
+    if character_engine == "qwen_static":
         mascot = Image.open(mascot_png).convert("RGBA")
         if mascot.size != (512, 768):
             raise ValueError("Qwen mascot PNG must be 512x768")
@@ -105,7 +115,10 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12, m
                                 old = points[joint]
                                 points[joint] = (old[0] * (1 - amount) + desired[0] * amount,
                                                  old[1] * (1 - amount) + desired[1] * amount)
-                if mascot is None:
+                if animator is not None:
+                    draw_rig_character(im, animator, actor_box, shot.gesture,
+                                       elapsed=index / fps, duration=shot.seconds)
+                elif mascot is None:
                     draw_character(draw, points, template_id, phase=phase)
                 else:
                     # Static generated SVG artwork with a subtle breathing/bobbing transform.
@@ -172,7 +185,7 @@ def verify_reels_video(path):
     proc = subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), "-hide_banner",
                            "-i", str(path)], capture_output=True, text=True)
     import re
-    dimensions = re.search(r"Video:.*?\\b(\\d{3,5})x(\\d{3,5})\\b", proc.stderr)
+    dimensions = re.search(r"Video:.*?(\d{3,5})x(\d{3,5})", proc.stderr)
     if not dimensions:
         raise RuntimeError("Could not verify encoded video dimensions")
     actual = tuple(map(int, dimensions.groups()))
@@ -190,9 +203,11 @@ def main():
     p.add_argument("--music")
     p.add_argument("--music-volume", type=float, default=0.12)
     p.add_argument("--mascot-png", default=None)
+    p.add_argument("--character-engine", choices=("rig", "legacy", "qwen_static"), default="rig")
     args = p.parse_args()
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
-    print(render(plan, args.lock, args.output, args.voice, args.music, args.music_volume, args.mascot_png))
+    print(render(plan, args.lock, args.output, args.voice, args.music,
+                 args.music_volume, args.mascot_png, args.character_engine))
 
 if __name__ == "__main__":
     main()
