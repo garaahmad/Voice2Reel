@@ -1,0 +1,54 @@
+{
+  "schema": "voice2reel.mascot_poses.v1",
+  "idle": {},
+  "present": {
+    "head": 3,
+    "arm_left_upper": 38,
+    "arm_left_lower": -20,
+    "hand_left": -8,
+    "arm_right_upper": -10,
+    "arm_right_lower": 8
+  },
+  "point": {
+    "head": -5,
+    "arm_right_upper": -52,
+    "arm_right_lower": -8,
+    "hand_right": -12,
+    "arm_left_upper": 4
+  },
+  "wave": {
+    "head": 5,
+    "arm_right_upper": -91,
+    "arm_right_lower": -25,
+    "hand_right": 13
+  },
+  "think": {
+    "head": -7,
+    "arm_right_upper": -42,
+    "arm_right_lower": -68,
+    "hand_right": 10,
+    "arm_left_upper": 5
+  },
+  "explain": {
+    "head": 2,
+    "arm_left_upper": 33,
+    "arm_left_lower": -10,
+    "arm_right_upper": -31,
+    "arm_right_lower": 15
+  },
+  "celebrate": {
+    "head": -4,
+    "arm_left_upper": 79,
+    "arm_left_lower": -30,
+    "arm_right_upper": -79,
+    "arm_right_lower": 25
+  },
+  "step": {
+    "leg_left_upper": 12,
+    "leg_left_lower": -14,
+    "leg_right_upper": -8,
+    "leg_right_lower": 11,
+    "arm_left_upper": -10,
+    "arm_right_upper": 10
+  }
+}
