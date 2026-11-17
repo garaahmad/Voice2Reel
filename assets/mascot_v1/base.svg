@@ -44,6 +44,7 @@
         </g>
       </g>
     </g>
+    <path id="neck_bridge" d="M256 274 Q256 296 256 325" fill="none" stroke="#20232B" stroke-width="22" stroke-linecap="round"/>
     <g id="torso" transform="rotate(0 256 498)">
       <path d="M244 304 Q232 306 231 329 L231 485 Q232 504 249 506 L263 506 Q280 504 281 485 L281 329 Q280 306 268 304Z" fill="#20232B"/>
       <path d="M241 329 Q241 361 241 399" fill="none" stroke="#41454D" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
