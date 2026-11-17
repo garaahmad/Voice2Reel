@@ -21,12 +21,16 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install lightweight preview/test dependencies
-        run: python -m pip install --disable-pip-version-check pillow cairosvg pytest
+        run: python -m pip install --disable-pip-version-check -r requirements/character-lab.txt cairosvg pytest
       - name: Test rig and pose continuity
         run: PYTHONPATH=. python -m pytest -q tests/test_mascot_v1.py
       - name: Render preview
         run: PYTHONPATH=. python -m scripts.preview_mascot_v1 --output mascot-v1-preview.png
+      - name: Integration smoke test (24 frames, 1080x1920)
+        run: PYTHONPATH=. python -m scripts.smoke_mascot_v1_reels --output mascot-v1-smoke.mp4
       - uses: actions/upload-artifact@v4
         with:
           name: mascot-v1-preview
-          path: mascot-v1-preview.png
+          path: |
+            mascot-v1-preview.png
+            mascot-v1-smoke.mp4
