@@ -472,42 +472,39 @@ def draw_character(draw, points, template_id="classic", emotion="happy", phase=0
     _soft_curve(draw, neck, (shoulder[0], shoulder[1]+unit*0.16),
                 hip, body_w, ink)
 
+    # Arms originate INSIDE the torso, never at detached shoulder targets.
+    # Single continuous quadratic/cubic silhouette eliminates gaps and kinks.
     for side, direction in (("left", -1), ("right", 1)):
-        root = points[f"shoulder_{side}"]
-        wrist = points[f"wrist_{side}"]
-        original_elbow = points[f"elbow_{side}"]
-        # Use the authored elbow target rather than a free IK bend.
-        # Previous IK bent elbows outward, creating detached-looking arms.
-        # Keep shoulders close to the neck and elbows between shoulder/wrist.
-        elbow = original_elbow
-        max_side = unit * 0.64
-        wrist = (max(shoulder[0]-max_side,
-                     min(shoulder[0]+max_side, wrist[0])), wrist[1])
-        elbow = ((root[0] + elbow[0] + wrist[0]) / 3,
-                 elbow[1])
-        # Shoulder -> elbow -> hand with a continuous rounded silhouette.
-        _soft_curve(draw, root,
-                    ((root[0]+elbow[0])/2,
-                     (root[1]+elbow[1])/2-unit*0.018),
-                    elbow, arm_w, ink)
-        _soft_curve(draw, elbow,
-                    ((elbow[0]+wrist[0])/2,
-                     (elbow[1]+wrist[1])/2),
-                    wrist, arm_w, ink)
+        wrist_target = points[f"wrist_{side}"]
+        elbow_target = points[f"elbow_{side}"]
+        root = (shoulder[0] + direction * body_w * 0.28,
+                shoulder[1] + unit * 0.075)
+        # Limit horizontal reach so the character retains a compact silhouette.
+        max_dx = unit * 0.61
+        wrist = (root[0] + max(-max_dx, min(max_dx, wrist_target[0]-root[0])),
+                 wrist_target[1])
+        # A gentle elbow, closer to the torso than the old extreme offset.
+        elbow = (root[0] + (wrist[0]-root[0])*0.62,
+                 root[1] + (wrist[1]-root[1])*0.52)
+        # One joined polyline with smoothly interpolated control points.
+        control1 = (root[0]+direction*unit*0.15,
+                    root[1]+unit*0.025)
+        control2 = (elbow[0], elbow[1]-unit*0.02)
+        _soft_curve(draw, root, control1, elbow, arm_w, ink)
+        _soft_curve(draw, elbow, control2, wrist, arm_w, ink)
+        # Overlap the arm onto the torso so there is no visible seam.
+        junction_r = arm_w*0.60
+        draw.ellipse((root[0]-junction_r,root[1]-junction_r,
+                      root[0]+junction_r,root[1]+junction_r),fill=ink)
 
-        # Rounded three-lobed cartoon hand, anchored at the wrist.
-        hand_r = max(3.5, arm_w*0.94)
+        # Simple rounded mitten, connected directly to the wrist.
         hx, hy = wrist
-        draw.ellipse((hx-hand_r, hy-hand_r*0.75,
-                      hx+hand_r, hy+hand_r*1.15), fill=ink)
-        finger_y = hy+hand_r*0.8
-        for offset in (-0.52, 0, 0.52):
-            fx = hx+offset*hand_r
-            draw.ellipse((fx-hand_r*0.31, finger_y-hand_r*0.12,
-                          fx+hand_r*0.31, finger_y+hand_r*0.92), fill=ink)
-        thumb_x = hx-direction*hand_r*0.88
-        draw.ellipse((thumb_x-hand_r*0.40, hy+hand_r*0.1,
-                      thumb_x+hand_r*0.40, hy+hand_r*0.95), fill=ink)
+        hand_r = max(3.0, arm_w*0.88)
+        draw.ellipse((hx-hand_r,hy-hand_r*0.8,
+                      hx+hand_r,hy+hand_r*1.15),fill=ink)
+        thumb_x = hx-direction*hand_r*0.80
+        draw.ellipse((thumb_x-hand_r*0.38,hy+hand_r*0.10,
+                      thumb_x+hand_r*0.38,hy+hand_r*0.82),fill=ink)
 
     # Large rounded head with soft offset highlight and thick clean outline.
     outline = max(2, int(unit*0.038))
