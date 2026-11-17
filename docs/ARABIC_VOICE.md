@@ -63,3 +63,18 @@ python -m voice2reel.production_voice \
 Edge TTS requires an online connection. Its terms and available voices may
 change independently of this repository. This stage does not clone voices,
 train a speech model, or impersonate real people.
+
+## Replace the sound in the existing video without changing the drawing
+
+The notebook includes the optional cell **Replace ONLY the audio in an existing MP4**.
+
+1. Generate and listen to the corrected \`voice.mp3\`.
+2. Ensure the original \`final.mp4\` already exists.
+3. Set \`REPLACE_AUDIO_ONLY = True\` and run the cell.
+
+It produces \`final_better_arabic_voice.mp4\` beside the original video
+by copying the existing encoded video stream (\`-c:v copy\`) and
+re-encoding **only audio**. It does not rerender the mascot, frame geometry,
+camera, animation or captions. It pads short audio with silence; audio that
+exceeds the existing video duration will end with the video. Review any
+duration warning in the preceding Voiceover cell.
