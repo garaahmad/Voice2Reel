@@ -70,8 +70,13 @@ def read_terms_file(path: str | Path | None) -> dict[str, str]:
 def replace_terms(text: str, terms: dict[str, str]) -> str:
     """Replace whole technical terms, not matching substrings in other words."""
     for key, replacement in sorted(terms.items(), key=lambda item: -len(item[0])):
-        text = re.sub(r"(?<!\w)" + re.escape(key) + r"(?!\w)",
-                      lambda _m: replacement, text, flags=re.IGNORECASE)
+        # Arabic clitics can attach directly to Latin technical tokens: وsetState.
+        # Match Latin token boundaries independently of adjacent Arabic letters.
+        if re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", key):
+            pattern = r"(?<![A-Za-z0-9_])" + re.escape(key) + r"(?![A-Za-z0-9_])"
+        else:
+            pattern = r"(?<!\w)" + re.escape(key) + r"(?!\w)"
+        text = re.sub(pattern, lambda _m: replacement, text, flags=re.IGNORECASE)
     return text
 
 def script_for_plan(plan: ProductionPlan, overrides=None, terms=None) -> str:
