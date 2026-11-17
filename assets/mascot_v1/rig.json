@@ -1,0 +1,136 @@
+{
+  "schema": "voice2reel.mascot_rig.v1",
+  "asset": "base.svg",
+  "canvas": {
+    "width": 512,
+    "height": 768
+  },
+  "parts": {
+    "head": {
+      "parent": "character",
+      "pivot": [
+        256,
+        296
+      ],
+      "min_deg": -12,
+      "max_deg": 12
+    },
+    "torso": {
+      "parent": "character",
+      "pivot": [
+        256,
+        498
+      ],
+      "min_deg": -8,
+      "max_deg": 8
+    },
+    "arm_left_upper": {
+      "parent": "character",
+      "pivot": [
+        229,
+        321
+      ],
+      "min_deg": -75,
+      "max_deg": 105
+    },
+    "arm_left_lower": {
+      "parent": "arm_left_upper",
+      "pivot": [
+        182,
+        392
+      ],
+      "min_deg": -100,
+      "max_deg": 100
+    },
+    "hand_left": {
+      "parent": "arm_left_lower",
+      "pivot": [
+        153,
+        459
+      ],
+      "min_deg": -35,
+      "max_deg": 35
+    },
+    "arm_right_upper": {
+      "parent": "character",
+      "pivot": [
+        283,
+        321
+      ],
+      "min_deg": -105,
+      "max_deg": 75
+    },
+    "arm_right_lower": {
+      "parent": "arm_right_upper",
+      "pivot": [
+        330,
+        392
+      ],
+      "min_deg": -100,
+      "max_deg": 100
+    },
+    "hand_right": {
+      "parent": "arm_right_lower",
+      "pivot": [
+        359,
+        459
+      ],
+      "min_deg": -35,
+      "max_deg": 35
+    },
+    "leg_left_upper": {
+      "parent": "character",
+      "pivot": [
+        244,
+        497
+      ],
+      "min_deg": -20,
+      "max_deg": 20
+    },
+    "leg_left_lower": {
+      "parent": "leg_left_upper",
+      "pivot": [
+        222,
+        577
+      ],
+      "min_deg": -35,
+      "max_deg": 35
+    },
+    "foot_left": {
+      "parent": "leg_left_lower",
+      "pivot": [
+        214,
+        669
+      ],
+      "min_deg": -20,
+      "max_deg": 20
+    },
+    "leg_right_upper": {
+      "parent": "character",
+      "pivot": [
+        268,
+        497
+      ],
+      "min_deg": -20,
+      "max_deg": 20
+    },
+    "leg_right_lower": {
+      "parent": "leg_right_upper",
+      "pivot": [
+        290,
+        577
+      ],
+      "min_deg": -35,
+      "max_deg": 35
+    },
+    "foot_right": {
+      "parent": "leg_right_lower",
+      "pivot": [
+        298,
+        669
+      ],
+      "min_deg": -20,
+      "max_deg": 20
+    }
+  }
+}
