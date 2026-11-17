@@ -17,7 +17,7 @@ def ease(t):
     t = max(0.0, min(1.0, t))
     return t * t * (3 - 2 * t)
 
-def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
+def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12, mascot_png=None):
     import imageio_ffmpeg
     plan = ProductionPlan.model_validate(plan)
     lock = load_lock(lock_path)
@@ -30,6 +30,11 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
     width, height = plan.width, plan.height
     if (width, height) != (1080, 1920):
         raise ValueError(f"Instagram Reels export requires 1080x1920, got {width}x{height}")
+    mascot = None
+    if mascot_png:
+        mascot = Image.open(mascot_png).convert("RGBA")
+        if mascot.size != (512, 768):
+            raise ValueError("Qwen mascot PNG must be 512x768")
     scale = width / 540
     writer = imageio_ffmpeg.write_frames(str(silent), (width, height), fps=fps,
                                          codec="libx264", quality=8,
@@ -100,7 +105,18 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12):
                                 old = points[joint]
                                 points[joint] = (old[0] * (1 - amount) + desired[0] * amount,
                                                  old[1] * (1 - amount) + desired[1] * amount)
-                draw_character(draw, points, template_id, phase=phase)
+                if mascot is None:
+                    draw_character(draw, points, template_id, phase=phase)
+                else:
+                    # Static generated SVG artwork with a subtle breathing/bobbing transform.
+                    # It is NOT yet a rigged character with independent limb animation.
+                    x0, y0, x1, y1 = actor_box
+                    mascot_w = int((x1-x0)*0.75)
+                    mascot_h = int((y1-y0)*0.86)
+                    frame_mascot = mascot.resize((mascot_w, mascot_h), Image.Resampling.LANCZOS)
+                    mx = int((x0+x1-mascot_w)/2)
+                    my = int(y0 + (y1-y0-mascot_h)/2 + math.sin(phase*math.pi*2)*5*scale)
+                    im.paste(frame_mascot, (mx, my), frame_mascot)
                 draw_objects(im, shot.objects, shot.seconds, phase, template["accent"], template["ink"])
                 # Captions are authored and validated; render with repo's Arabic-aware helper.
                 draw.rounded_rectangle(tuple(round(v * scale) for v in (25, 790, 515, 905)), radius=round(20 * scale),
@@ -173,9 +189,10 @@ def main():
     p.add_argument("--voice")
     p.add_argument("--music")
     p.add_argument("--music-volume", type=float, default=0.12)
+    p.add_argument("--mascot-png", default=None)
     args = p.parse_args()
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
-    print(render(plan, args.lock, args.output, args.voice, args.music, args.music_volume))
+    print(render(plan, args.lock, args.output, args.voice, args.music, args.music_volume, args.mascot_png))
 
 if __name__ == "__main__":
     main()
