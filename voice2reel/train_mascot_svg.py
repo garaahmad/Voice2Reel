@@ -1,7 +1,8 @@
 """QLoRA fine-tuning for Qwen text-to-SVG mascot drawing (GPU required).
 
-Usage: python scripts/build_python_scene_dataset.py
-       python -m voice2reel.train_python_scene --output outputs/qwen_mascot_svg
+Usage: python -m scripts.build_mascot_svg_dataset --output datasets/mascot_svg
+       python -m voice2reel.train_mascot_svg --check-only --train datasets/mascot_svg/train.jsonl --validation datasets/mascot_svg/validation.jsonl
+       python -m voice2reel.train_mascot_svg --output outputs/qwen_mascot_svg
 """
 import argparse
 import json
@@ -37,30 +38,45 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--train", default="datasets/mascot_svg/train.jsonl")
     p.add_argument("--validation", default="datasets/mascot_svg/validation.jsonl")
-    p.add_argument("--output", default="outputs/qwen_python_scene")
+    p.add_argument("--output", default="outputs/qwen_mascot_svg")
+    p.add_argument("--check-only", action="store_true", help="Validate SVG and tokenizer lengths without a GPU or training")
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--patience", type=int, default=2)
     p.add_argument("--max-steps", type=int, default=-1)
     p.add_argument("--max-length", type=int, default=3072)
     args = p.parse_args()
-    import torch
-    if not torch.cuda.is_available():
-        raise RuntimeError("CUDA GPU required for QLoRA")
-    from transformers import (EarlyStoppingCallback, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig,
-                              Trainer, TrainingArguments, set_seed)
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-    from voice2reel.scriptwriter.data import AnswerCollator
-    from voice2reel.common import write_json, digest_file
+    from transformers import AutoTokenizer
     train = load(args.train)
     validation = load(args.validation)
     if {r["id"] for r in train} & {r["id"] for r in validation}:
         raise ValueError("Split leakage")
-    set_seed(42)
+    print(f"✅ SVG dataset checked: train={len(train)}, validation={len(validation)}", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(MODEL, revision=REVISION)
     tokenizer.pad_token = tokenizer.eos_token
+    print("🔎 Checking token lengths and assistant masks...", flush=True)
+    encoded_train = [encode(r, tokenizer, args.max_length) for r in train]
+    encoded_validation = [encode(r, tokenizer, args.max_length) for r in validation]
+    print(f"✅ Tokenizer checks passed. Longest train record: "
+          f"{max(len(r['input_ids']) for r in encoded_train)} tokens; "
+          f"validation: {max(len(r['input_ids']) for r in encoded_validation)} tokens", flush=True)
+    if args.check_only:
+        print("✅ Preflight complete; no model loaded and no training started.", flush=True)
+        return
+
+    import torch
+    if not torch.cuda.is_available():
+        raise RuntimeError(
+            "CUDA GPU unavailable. In Google Colab select Runtime > Change runtime type > T4 GPU, "
+            "then restart the setup and retry.")
+    from transformers import (EarlyStoppingCallback, AutoModelForCausalLM, BitsAndBytesConfig,
+                              Trainer, TrainingArguments, set_seed)
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+    from voice2reel.scriptwriter.data import AnswerCollator
+    from voice2reel.common import write_json, digest_file
+    set_seed(42)
     model = AutoModelForCausalLM.from_pretrained(
         MODEL, revision=REVISION, device_map={"": 0},
-        torch_dtype=torch.float16,
+        dtype=torch.float16,
         quantization_config=BitsAndBytesConfig(
             load_in_4bit=True, bnb_4bit_quant_type="nf4",
             bnb_4bit_use_double_quant=True, bnb_4bit_compute_dtype=torch.float16))
@@ -76,8 +92,8 @@ def main():
     trainer = Trainer(
         callbacks=[EarlyStoppingCallback(early_stopping_patience=args.patience)],
         model=model, processing_class=tokenizer,
-        train_dataset=[encode(r, tokenizer, args.max_length) for r in train],
-        eval_dataset=[encode(r, tokenizer, args.max_length) for r in validation],
+        train_dataset=encoded_train,
+        eval_dataset=encoded_validation,
         data_collator=AnswerCollator(tokenizer.pad_token_id),
         args=TrainingArguments(
             output_dir=str(output), num_train_epochs=args.epochs, max_steps=args.max_steps,
