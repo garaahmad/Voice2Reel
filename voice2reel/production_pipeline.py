@@ -13,6 +13,7 @@ from voice2reel.character_templates import FONT_PATH, draw_character, get_templa
 from voice2reel.production_contract import ProductionPlan
 from voice2reel.scene_objects import draw_objects
 from voice2reel.mascot_animator import MascotAnimator
+from voice2reel.character_spec import load_spec
 from voice2reel.mascot_renderer import draw_rig_character
 
 def ease(t):
@@ -20,7 +21,7 @@ def ease(t):
     return t * t * (3 - 2 * t)
 
 def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12,
-           mascot_png=None, character_engine="rig"):
+           mascot_png=None, character_engine="rig", character_spec=None):
     import imageio_ffmpeg
     plan = ProductionPlan.model_validate(plan)
     lock = load_lock(lock_path)
@@ -31,8 +32,11 @@ def render(plan, lock_path, output, voice=None, music=None, music_volume=0.12,
         raise ValueError("qwen_static requires --mascot-png")
     if character_engine != "qwen_static" and mascot_png is not None:
         raise ValueError("--mascot-png is only supported with qwen_static")
+    if character_spec and character_engine != "rig":
+        raise ValueError("--character-spec requires --character-engine rig")
     template = get_template("classic" if character_engine == "rig" else template_id)
-    animator = MascotAnimator() if character_engine == "rig" else None
+    spec = load_spec(character_spec) if character_spec else None
+    animator = MascotAnimator(spec=spec) if character_engine == "rig" else None
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     silent = output.with_name(output.stem + ".silent.mp4")
@@ -204,10 +208,13 @@ def main():
     p.add_argument("--music-volume", type=float, default=0.12)
     p.add_argument("--mascot-png", default=None)
     p.add_argument("--character-engine", choices=("rig", "legacy", "qwen_static"), default="rig")
+    p.add_argument("--character-spec", default=None,
+                   help="Validated CharacterSpec JSON for the rigged mascot")
     args = p.parse_args()
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
     print(render(plan, args.lock, args.output, args.voice, args.music,
-                 args.music_volume, args.mascot_png, args.character_engine))
+                 args.music_volume, args.mascot_png, args.character_engine,
+                 args.character_spec))
 
 if __name__ == "__main__":
     main()
