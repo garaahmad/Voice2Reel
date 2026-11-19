@@ -51,7 +51,8 @@ ACCENT_DESC = {
 }
 
 def example(spec: CharacterSpec, language_index: int, phrasing: int) -> dict:
-    pick = lambda table, key: table[key][language_index]
+    def pick(table, key):
+        return table[key][language_index]
     palette = pick(PAL_DESC, spec.palette)
     expression = pick(EXP_DESC, spec.expression)
     eyes = pick(EYE_DESC, spec.eyes)
