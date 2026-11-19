@@ -4,7 +4,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from voice2reel.character_spec import CharacterSpec, DEFAULT_SPEC, PALETTE_IDS, parse_spec, save_spec, load_spec
+from voice2reel.character_spec import DEFAULT_SPEC, PALETTE_IDS, parse_spec, save_spec, load_spec
 from voice2reel.character_spec_renderer import apply_spec
 from voice2reel.generate_character_spec import _extract_json
 from voice2reel.mascot_animator import MascotAnimator
@@ -36,7 +36,7 @@ def test_json_roundtrip_and_generation_parser(tmp_path):
     spec = variant(palette="forest", expression="curious")
     filename = save_spec(spec, tmp_path / "model.json")
     assert load_spec(filename) == spec
-    assert _extract_json("Here is the answer:\n" + spec.model_dump_json()) == spec.model_dump_json()
+    assert json.loads(_extract_json("Here is the answer:\n" + spec.model_dump_json())) == spec.model_dump()
     with pytest.raises(ValueError):
         _extract_json("not a JSON object")
 
