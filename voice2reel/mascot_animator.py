@@ -14,8 +14,11 @@ from voice2reel.mascot_rig import ASSET_DIR, animation_angles, load_rig
 
 
 class MascotAnimator:
-    def __init__(self, asset_dir: Path | str = ASSET_DIR):
+    def __init__(self, asset_dir: Path | str = ASSET_DIR, spec=None):
         self.rig, self.poses, self.base_svg = load_rig(asset_dir)
+        if spec is not None:
+            from voice2reel.character_spec_renderer import apply_spec
+            self.base_svg = apply_spec(self.base_svg, spec)
         self._tokens = {}
         self.template = self.base_svg
         for part, config in self.rig["parts"].items():
@@ -47,10 +50,10 @@ class MascotAnimator:
         return Image.open(io.BytesIO(png)).convert("RGBA")
 
 
-def render_pose_sheet(output: str | Path, gestures=("idle", "present", "point", "wave")):
+def render_pose_sheet(output: str | Path, gestures=("idle", "present", "point", "wave"), spec=None):
     """Render a low-cost visual acceptance sheet before video production."""
     from PIL import ImageDraw
-    animator = MascotAnimator()
+    animator = MascotAnimator(spec=spec)
     cell = (300, 510)
     sheet = Image.new("RGB", (cell[0] * len(gestures), cell[1]), "#f6f6f5")
     draw = ImageDraw.Draw(sheet)
