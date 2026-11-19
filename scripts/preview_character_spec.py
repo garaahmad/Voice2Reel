@@ -1,7 +1,6 @@
 """Preview safe CharacterSpec styles on the existing animated mascot (GPU-free)."""
 import argparse
 from pathlib import Path
-from PIL import Image
 from voice2reel.character_spec import DEFAULT_SPEC, load_spec
 from voice2reel.mascot_animator import MascotAnimator, render_pose_sheet
 
