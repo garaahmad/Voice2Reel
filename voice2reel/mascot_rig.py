@@ -58,22 +58,43 @@ def ease(value: float) -> float:
 
 def animation_angles(rig: dict, poses: dict, gesture: str,
                      elapsed: float, duration: float) -> dict[str, float]:
-    """Smoothly enter/exit a gesture; keep angles within rig constraints."""
+    """Natural-looking arm timing with an authored, relaxed rest position.
+
+    Each joint follows a bounded angle curve with a short lag for forearms and
+    hands. Poses ease back to *idle*, not the previous stiff zero-angle T pose.
+    Transform hierarchy and pivots never change.
+    """
     if gesture not in poses or gesture == "schema":
         raise ValueError(f"Unsupported mascot gesture: {gesture}")
     if duration <= 0:
         raise ValueError("Duration must be positive")
-    blend = ease(min(1.0, elapsed / max(.2, duration * .22))) * ease(
-        min(1.0, max(0.0, (duration - elapsed) / max(.2, duration * .22))))
+    if not math.isfinite(elapsed):
+        raise ValueError("Elapsed time must be finite")
+
+    neutral = poses["idle"]
+    requested = poses[gesture]
+    elapsed = min(duration, max(0.0, elapsed))
     angles = {}
     for part, config in rig["parts"].items():
-        target = float(poses[gesture].get(part, 0))
-        angle = target * blend
-        if part == "head":
-            angle += 1.8 * math.sin(2 * math.pi * elapsed * .55) * blend
+        rest = float(neutral.get(part, 0))
+        target = float(requested.get(part, rest))
+        # Sequential joint articulation: shoulders move first, elbow follows.
+        lag = (0.12 if part.startswith("hand_") else
+               0.075 if part.endswith("_lower") else 0.0)
+        lag = min(lag, duration * 0.12)
+        active_duration = max(0.001, duration - lag)
+        t = max(0.0, elapsed - lag)
+        entry = ease(min(1.0, t / max(0.18, active_duration * 0.25)))
+        leave = ease(min(1.0, max(0.0, (active_duration - t) /
+                                  max(0.18, active_duration * 0.25))))
+        weight = entry * leave
+        angle = rest + (target - rest) * weight
         if gesture == "wave" and part in ("arm_right_lower", "hand_right"):
-            angle += 9.0 * math.sin(2 * math.pi * elapsed * 2.0) * blend
+            angle += 7.0 * math.sin(2 * math.pi * elapsed * 1.7) * weight
         if gesture == "step" and part.startswith("leg_"):
-            angle *= math.sin(2 * math.pi * elapsed * 1.25)
+            angle = rest + (target-rest) * weight * math.sin(
+                2 * math.pi * elapsed * 1.2)
+        if part == "head" and gesture != "idle":
+            angle += 0.8 * math.sin(2 * math.pi * elapsed * 0.6) * weight
         angles[part] = min(config["max_deg"], max(config["min_deg"], angle))
     return angles
