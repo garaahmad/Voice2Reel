@@ -50,3 +50,21 @@ The `qwen_static` and `rig` modes are mutually exclusive. **Qwen story generatio
 - Current facial expressions are pre-authored SVG (one happy face), not lip-synced; sophisticated expressive lip-sync and advanced motion graphics remain separate work.
 - Qwen training, Edge TTS and rendering are not run in GitHub tests; only the local/CI smoke video runs without model or voice downloads.
 - The preview tests prove geometry, code integration and format, not subjective artistic acceptance. Visual feedback is still important.
+
+## November 20, 2026 — joint motion refinement
+
+- Elbow joining caps and slightly softer arm curves in
+  `assets/mascot_v1/base.svg` hide gaps between upper arm and forearm.
+- Relaxed idle angles in `poses.json` prevent arms snapping back to a stiff
+  zero-degree position between gestures.
+- The rig now interpolates **from idle → gesture → idle** with modest
+  forearm/hand lag, instead of independently swinging each limb.
+- The `point` pose intentionally bends the elbow rather than extending a
+  horizontal arm as a rigid T-pose.
+- All changes keep the same validated SVG hierarchy, 14 pivots,
+  CharacterSpec styling and Reels resolution.
+
+CI runs the rig geometry tests, generates pose sheet art and checks an
+encoded 1080×1920 MP4 without Qwen/GPU. The animation still remains
+2D keyframed and isn't motion-capture quality; review the pose preview
+and final footage to judge whether its aesthetic meets your target.
