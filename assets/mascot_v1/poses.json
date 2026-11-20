@@ -22,9 +22,9 @@
     "head": -3,
     "arm_left_upper": -8,
     "arm_left_lower": -10,
-    "arm_right_upper": -48,
-    "arm_right_lower": -18,
-    "hand_right": -8
+    "arm_right_upper": -41,
+    "arm_right_lower": 19,
+    "hand_right": -3
   },
   "wave": {
     "head": 4,
