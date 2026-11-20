@@ -10,6 +10,7 @@ import re
 import unicodedata
 from pathlib import Path
 from voice2reel.production_contract import ProductionPlan
+from voice2reel.arabic_speech import pronounce, replace_whole_terms
 
 VOICES = {"ar": "ar-JO-TaimNeural", "en": "en-US-GuyNeural"}
 VOICE_OPTIONS = {
@@ -68,18 +69,16 @@ def read_terms_file(path: str | Path | None) -> dict[str, str]:
     return data
 
 def replace_terms(text: str, terms: dict[str, str]) -> str:
-    """Replace whole technical terms, not matching substrings in other words."""
-    for key, replacement in sorted(terms.items(), key=lambda item: -len(item[0])):
-        # Arabic clitics can attach directly to Latin technical tokens: وsetState.
-        # Match Latin token boundaries independently of adjacent Arabic letters.
-        if re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", key):
-            pattern = r"(?<![A-Za-z0-9_])" + re.escape(key) + r"(?![A-Za-z0-9_])"
-        else:
-            pattern = r"(?<!\w)" + re.escape(key) + r"(?!\w)"
-        text = re.sub(pattern, lambda _m: replacement, text, flags=re.IGNORECASE)
-    return text
+    """Compatibility wrapper for explicit speech-only word replacements."""
+    return replace_whole_terms(text, terms)
 
-def script_for_plan(plan: ProductionPlan, overrides=None, terms=None) -> str:
+def script_for_plan(plan: ProductionPlan, overrides=None, terms=None,
+                    language="ar", diacritics="technical") -> str:
+    """Prepare a reviewable speech-only script, leaving the visual plan intact.
+
+    The built-in Arabic dictionary adds partial phonetic hints to known tech
+    words. It does NOT guess grammatical vowels across an entire sentence.
+    """
     overrides = overrides or {}
     terms = terms or {}
     if any(i > len(plan.shots) for i in overrides):
@@ -87,12 +86,17 @@ def script_for_plan(plan: ProductionPlan, overrides=None, terms=None) -> str:
     clauses = []
     for index, shot in enumerate(plan.shots, 1):
         narration = overrides.get(index, shot.narration)
-        clauses.append(prepare_text(replace_terms(narration, terms)))
+        if language == "ar":
+            narration = pronounce(narration, mode=diacritics, overrides=terms)
+        else:
+            narration = replace_terms(narration, terms)
+        clauses.append(prepare_text(narration))
+    # Finishing each shot's text with punctuation encourages natural TTS breaks.
     return " ".join(clauses)
 
 async def synthesize(plan, output, language="ar", voice=None, rate="+0%",
                      pitch="+0Hz", script_json=None, terms_json=None,
-                     preview_text=None):
+                     preview_text=None, diacritics="technical"):
     import edge_tts
     if language not in VOICES:
         raise ValueError("language must be ar or en")
@@ -104,11 +108,13 @@ async def synthesize(plan, output, language="ar", voice=None, rate="+0%",
     if preview_text is not None:
         if len(preview_text) > 700:
             raise ValueError("Preview text exceeds 700 characters")
-        text = prepare_text(preview_text)
+        text = prepare_text(pronounce(preview_text, mode=diacritics)
+                            if language == "ar" else preview_text)
     else:
         plan = ProductionPlan.model_validate(plan)
         text = script_for_plan(
-            plan, read_override_file(script_json), read_terms_file(terms_json)
+            plan, read_override_file(script_json), read_terms_file(terms_json),
+            language=language, diacritics=diacritics
         )
     output = Path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -124,7 +130,8 @@ async def synthesize(plan, output, language="ar", voice=None, rate="+0%",
     finally:
         temporary.unlink(missing_ok=True)
     output.with_suffix(".speech.txt").write_text(text, encoding="utf-8")
-    print(f"Voice: {chosen_voice} | rate: {rate} | pitch: {pitch}")
+    print(f"Voice: {chosen_voice} | rate: {rate} | pitch: {pitch} "
+          f"| pronunciation: {diacritics if language == 'ar' else 'off'}")
     print("Speech script:", output.with_suffix(".speech.txt"))
     return output
 
@@ -140,11 +147,13 @@ def main():
     p.add_argument("--pitch", default="+0Hz")
     p.add_argument("--script-json")
     p.add_argument("--terms-json")
+    p.add_argument("--diacritics", choices=("off", "technical"), default="technical",
+                   help="Conservative Arabic word-level tashkeel; not full diacritization")
     args = p.parse_args()
     plan = json.loads(Path(args.plan).read_text(encoding="utf-8")) if args.plan else None
     result = asyncio.run(synthesize(
         plan, args.output, args.language, args.voice, args.rate, args.pitch,
-        args.script_json, args.terms_json, args.preview_text
+        args.script_json, args.terms_json, args.preview_text, args.diacritics
     ))
     print(result)
 
