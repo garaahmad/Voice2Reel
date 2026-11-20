@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import pytest
 
 from voice2reel.production_contract import ProductionPlan
+from voice2reel.arabic_speech import pronounce, TECHNICAL_PRONUNCIATIONS
 from voice2reel.production_voice import (
     VOICE_OPTIONS, prepare_text, read_override_file, read_terms_file,
     replace_terms, script_for_plan, synthesize,
@@ -96,3 +97,34 @@ def test_synthesis_writes_mp3_and_script_without_network(tmp_path, monkeypatch):
     assert captured["options"]["pitch"] == "+0Hz"
     assert captured["voice"] == "ar-JO-TaimNeural"
     assert plan.model_dump_json() == original
+
+
+def test_conservative_arabic_tashkeel_for_technical_words():
+    spoken = pronounce("والراوتر بيوزع الإنترنت وFlutter وsetState")
+    assert "والرَّاوْتَر" in spoken
+    assert "الإِنْتَرْنِت" in spoken
+    assert "فْلاتَر" in spoken
+    assert "سِتْ سْتَيْت" in spoken
+    assert pronounce("والراوتر", mode="off") == "والراوتر"
+
+
+def test_explicit_pronunciation_override_takes_priority():
+    spoken = pronounce("الراوتر وFlutter", overrides={"الراوتر": "راوْتَر", "Flutter": "فلاتر"})
+    assert spoken.startswith("راوْتَر")
+    assert "فلاتر" in spoken and "فْلاتَر" not in spoken
+
+
+def test_voice_script_retains_original_plan_and_preserves_dialect():
+    plan = sample_plan()
+    original = plan.model_dump_json()
+    text = script_for_plan(plan, diacritics="technical", language="ar")
+    assert "أهلا فيكم" in text  # We do not force conversion to formal Arabic.
+    assert "فْلاتَر" in text
+    assert "سِتْ سْتَيْت" in text
+    assert plan.model_dump_json() == original
+
+
+def test_glossary_is_explicit_and_bounded():
+    assert len(TECHNICAL_PRONUNCIATIONS) <= 40
+    with pytest.raises(ValueError):
+        pronounce("مرحبا", mode="full_automatic")
