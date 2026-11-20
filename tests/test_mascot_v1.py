@@ -30,8 +30,17 @@ def test_all_gestures_generate_valid_svg():
             for part, angle in angles.items():
                 limits = animator.rig["parts"][part]
                 assert limits["min_deg"] <= angle <= limits["max_deg"]
-    assert all(angle == 0 for angle in
-               animation_angles(animator.rig, animator.poses, "point", 3, 3).values())
+    # Every gesture returns to the authored relaxed pose, not zero-degree arms.
+    idle = animation_angles(animator.rig, animator.poses, "idle", 0, 3)
+    for gesture in animator.poses:
+        if gesture == "schema":
+            continue
+        assert animation_angles(animator.rig, animator.poses, gesture, 0, 3) == idle
+        assert animation_angles(animator.rig, animator.poses, gesture, 3, 3) == idle
+    # Delayed elbows avoid overly robotic shoulder/hand movements.
+    present = animation_angles(animator.rig, animator.poses, "present", 1.3, 3)
+    assert abs(present["arm_left_upper"]) < 25
+    assert abs(present["arm_right_upper"]) < 25
 
 
 def test_composite_reels_frame():
@@ -49,3 +58,13 @@ def test_cairo_png():
     assert image.size == (256, 384)
     assert image.mode == "RGBA"
     assert image.getbbox() is not None
+
+
+def test_elbow_pivots_and_capped_joints():
+    from voice2reel.mascot_rig import load_rig
+    rig, _, svg = load_rig()
+    assert rig["parts"]["arm_left_lower"]["pivot"] == [182, 392]
+    assert rig["parts"]["arm_right_lower"]["pivot"] == [330, 392]
+    # Caps are ink-colored and sit exactly at the authored elbow pivots.
+    assert '<circle cx="182" cy="392" r="14" fill="#20232B"/>' in svg
+    assert '<circle cx="330" cy="392" r="14" fill="#20232B"/>' in svg
