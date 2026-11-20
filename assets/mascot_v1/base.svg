@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="768" viewBox="0 0 512 768">
+  <title>Mascot V1 - original explainer character</title>
+  <g id="character" transform="translate(0 0)">
+    <ellipse id="ground_shadow" cx="255" cy="704" rx="124" ry="14" fill="#111827" opacity="0.10" />
+    <g id="leg_left_upper" transform="rotate(0 244 497)">
+      <path d="M244 495 Q229 523 222 577" fill="none" stroke="#20232B" stroke-width="27" stroke-linecap="round"/>
+      <g id="leg_left_lower" transform="rotate(0 222 577)">
+        <path d="M222 576 Q218 624 214 669" fill="none" stroke="#20232B" stroke-width="25" stroke-linecap="round"/>
+        <g id="foot_left" transform="rotate(0 214 669)">
+          <path d="M225 658 Q219 655 210 663 Q199 677 184 678 Q166 678 161 692 Q160 702 176 705 L228 705 Q239 704 238 692 Q236 673 225 658Z" fill="#20232B" />
+          <path d="M178 695 Q199 691 223 695" fill="none" stroke="#434851" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        </g>
+      </g>
+    </g>
+    <g id="leg_right_upper" transform="rotate(0 268 497)">
+      <path d="M268 495 Q283 523 290 577" fill="none" stroke="#20232B" stroke-width="27" stroke-linecap="round"/>
+      <g id="leg_right_lower" transform="rotate(0 290 577)">
+        <path d="M290 576 Q294 624 298 669" fill="none" stroke="#20232B" stroke-width="25" stroke-linecap="round"/>
+        <g id="foot_right" transform="rotate(0 298 669)">
+          <path d="M287 658 Q293 655 302 663 Q313 677 328 678 Q346 678 351 692 Q352 702 336 705 L284 705 Q273 704 274 692 Q276 673 287 658Z" fill="#20232B" />
+          <path d="M334 695 Q313 691 289 695" fill="none" stroke="#434851" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        </g>
+      </g>
+    </g>
+    <g id="arm_left_upper" transform="rotate(0 229 321)">
+      <path d="M230 321 Q213 339 182 392" fill="none" stroke="#20232B" stroke-width="27" stroke-linecap="round"/>
+      <circle cx="182" cy="392" r="14" fill="#20232B"/>
+      <g id="arm_left_lower" transform="rotate(0 182 392)">
+        <path d="M182 392 Q166 417 153 459" fill="none" stroke="#20232B" stroke-width="25" stroke-linecap="round"/>
+        <g id="hand_left" transform="rotate(0 153 459)">
+          <path d="M149 448 Q135 446 132 457 Q128 464 132 480 Q133 495 144 500 L158 502 Q173 496 176 485 Q179 469 168 457 Q163 449 149 448Z" fill="#20232B"/>
+          <path d="M139 466 Q122 452 117 466 Q112 481 136 489 L145 481Z" fill="#20232B"/>
+          <path d="M144 498 Q151 501 159 498" fill="none" stroke="#4A4E57" stroke-width="3" opacity="0.55"/>
+        </g>
+      </g>
+    </g>
+    <g id="arm_right_upper" transform="rotate(0 283 321)">
+      <path d="M282 321 Q299 339 330 392" fill="none" stroke="#20232B" stroke-width="27" stroke-linecap="round"/>
+      <circle cx="330" cy="392" r="14" fill="#20232B"/>
+      <g id="arm_right_lower" transform="rotate(0 330 392)">
+        <path d="M330 392 Q346 417 359 459" fill="none" stroke="#20232B" stroke-width="25" stroke-linecap="round"/>
+        <g id="hand_right" transform="rotate(0 359 459)">
+          <path d="M363 448 Q377 446 380 457 Q384 464 380 480 Q379 495 368 500 L354 502 Q339 496 336 485 Q333 469 344 457 Q349 449 363 448Z" fill="#20232B"/>
+          <path d="M373 466 Q390 452 395 466 Q400 481 376 489 L367 481Z" fill="#20232B"/>
+          <path d="M368 498 Q361 501 353 498" fill="none" stroke="#4A4E57" stroke-width="3" opacity="0.55"/>
+        </g>
+      </g>
+    </g>
+    <path id="neck_bridge" d="M256 274 Q256 296 256 325" fill="none" stroke="#20232B" stroke-width="22" stroke-linecap="round"/>
+    <g id="torso" transform="rotate(0 256 498)">
+      <path d="M244 304 Q232 306 231 329 L231 485 Q232 504 249 506 L263 506 Q280 504 281 485 L281 329 Q280 306 268 304Z" fill="#20232B"/>
+      <path d="M241 329 Q241 361 241 399" fill="none" stroke="#41454D" stroke-width="6" stroke-linecap="round" opacity="0.65"/>
+      <path d="M243 309 Q256 320 269 309" fill="none" stroke="#EF7559" stroke-width="8" stroke-linecap="round"/>
+    </g>
+    <g id="head" transform="rotate(0 256 296)">
+      <circle cx="259" cy="201" r="92" fill="#252B33" opacity="0.17"/>
+      <circle cx="256" cy="196" r="91" fill="#FFFCF4" stroke="#20232B" stroke-width="9"/>
+      <path d="M196 156 Q210 132 241 129" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.8"/>
+      <g id="face">
+        <path d="M203 169 Q216 157 233 168" fill="none" stroke="#20232B" stroke-width="7" stroke-linecap="round"/>
+        <path d="M278 168 Q296 157 309 169" fill="none" stroke="#20232B" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="220" cy="204" rx="18" ry="23" fill="#FFFFFF" stroke="#20232B" stroke-width="4"/>
+        <ellipse cx="291" cy="204" rx="18" ry="23" fill="#FFFFFF" stroke="#20232B" stroke-width="4"/>
+        <ellipse cx="223" cy="207" rx="9" ry="12" fill="#20232B"/>
+        <ellipse cx="294" cy="207" rx="9" ry="12" fill="#20232B"/>
+        <circle cx="219" cy="201" r="3.6" fill="#FFFFFF"/>
+        <circle cx="290" cy="201" r="3.6" fill="#FFFFFF"/>
+        <path id="mouth_happy" d="M234 242 Q256 267 278 242" fill="none" stroke="#20232B" stroke-width="7" stroke-linecap="round"/>
+        <ellipse cx="193" cy="243" rx="10" ry="5" fill="#EF7559" opacity="0.23"/>
+        <ellipse cx="320" cy="243" rx="10" ry="5" fill="#EF7559" opacity="0.23"/>
+      </g>
+    </g>
+  </g>
+</svg>

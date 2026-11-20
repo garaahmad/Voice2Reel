@@ -1,0 +1,36 @@
+name: Mascot V1 Rig Checks
+
+on:
+  push:
+    branches: [test-new-data]
+    paths:
+      - 'assets/mascot_v1/**'
+      - 'voice2reel/mascot_*.py'
+      - 'voice2reel/production_pipeline.py'
+      - 'tests/test_mascot_v1.py'
+      - '.github/workflows/mascot-v1.yml'
+  workflow_dispatch:
+
+jobs:
+  mascot-rig:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install lightweight preview/test dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements/character-lab.txt cairosvg pytest
+      - name: Test rig and pose continuity
+        run: PYTHONPATH=. python -m pytest -q tests/test_mascot_v1.py
+      - name: Render preview
+        run: PYTHONPATH=. python -m scripts.preview_mascot_v1 --output mascot-v1-preview.png
+      - name: Integration smoke test (24 frames, 1080x1920)
+        run: PYTHONPATH=. python -m scripts.smoke_mascot_v1_reels --output mascot-v1-smoke.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mascot-v1-preview
+          path: |
+            mascot-v1-preview.png
+            mascot-v1-smoke.mp4

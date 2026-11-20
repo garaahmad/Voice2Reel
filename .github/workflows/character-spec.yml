@@ -1,0 +1,38 @@
+name: CharacterSpec Rig Regression
+
+on:
+  push:
+    branches: [test-new-data]
+    paths:
+      - 'voice2reel/character_spec*.py'
+      - 'voice2reel/generate_character_spec.py'
+      - 'voice2reel/train_character_spec.py'
+      - 'voice2reel/mascot_animator.py'
+      - 'scripts/build_character_spec_dataset.py'
+      - 'scripts/preview_character_spec.py'
+      - 'tests/test_character_spec.py'
+      - '.github/workflows/character-spec.yml'
+  workflow_dispatch:
+
+jobs:
+  character-spec-cpu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install light rendering and test dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements/character-lab.txt pytest
+      - name: Verify safe schema, rig, dataset and PNG
+        run: PYTHONPATH=. python -m pytest -q tests/test_character_spec.py tests/test_mascot_v1.py
+      - name: Render demo without GPU or Qwen
+        run: PYTHONPATH=. python -m scripts.preview_character_spec --output character-spec-preview.png --sheet character-spec-poses.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: character-spec-rig-previews
+          path: |
+            character-spec-preview.png
+            character-spec-poses.png

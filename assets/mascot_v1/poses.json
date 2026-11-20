@@ -1,0 +1,73 @@
+{
+  "schema": "voice2reel.mascot_poses.v1",
+  "idle": {
+    "arm_left_upper": -9,
+    "arm_left_lower": -11,
+    "hand_left": -3,
+    "arm_right_upper": 9,
+    "arm_right_lower": 11,
+    "hand_right": 3,
+    "head": 0
+  },
+  "present": {
+    "head": 3,
+    "arm_left_upper": 13,
+    "arm_left_lower": -17,
+    "hand_left": -4,
+    "arm_right_upper": 4,
+    "arm_right_lower": 15,
+    "hand_right": 5
+  },
+  "point": {
+    "head": -3,
+    "arm_left_upper": -8,
+    "arm_left_lower": -10,
+    "arm_right_upper": -41,
+    "arm_right_lower": 19,
+    "hand_right": -3
+  },
+  "wave": {
+    "head": 4,
+    "arm_left_upper": -8,
+    "arm_left_lower": -12,
+    "arm_right_upper": -77,
+    "arm_right_lower": -37,
+    "hand_right": 12
+  },
+  "think": {
+    "head": -6,
+    "arm_left_upper": -10,
+    "arm_left_lower": -9,
+    "arm_right_upper": -35,
+    "arm_right_lower": -58,
+    "hand_right": 10
+  },
+  "explain": {
+    "head": 2,
+    "arm_left_upper": 19,
+    "arm_left_lower": -20,
+    "hand_left": -8,
+    "arm_right_upper": -19,
+    "arm_right_lower": 22,
+    "hand_right": 5
+  },
+  "celebrate": {
+    "head": -3,
+    "arm_left_upper": 80,
+    "arm_left_lower": -22,
+    "arm_right_upper": -80,
+    "arm_right_lower": 22,
+    "hand_left": 9,
+    "hand_right": -9
+  },
+  "step": {
+    "leg_left_upper": 12,
+    "leg_left_lower": -14,
+    "leg_right_upper": -8,
+    "leg_right_lower": 11,
+    "arm_left_upper": -17,
+    "arm_right_upper": 17,
+    "arm_left_lower": -11,
+    "arm_right_lower": 11
+  }
+}
