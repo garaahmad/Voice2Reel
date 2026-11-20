@@ -78,3 +78,29 @@ re-encoding **only audio**. It does not rerender the mascot, frame geometry,
 camera, animation or captions. It pads short audio with silence; audio that
 exceeds the existing video duration will end with the video. Review any
 duration warning in the preceding Voiceover cell.
+
+## Partial Arabic tashkeel and pronunciation (November 2026)
+
+The updated Voiceover cell has **ARABIC_TASHKEEL = "technical"** (or "off").
+It adds only conservative vowel marks to a short list of technical words,
+including الراوتر, الإنترنت, Flutter, Firebase, setState and API. This
+is **not** a fully trained Arabic diacritizer and does not alter dialect or
+grammar automatically; automatic full i'raab is intentionally not attempted.
+The text is saved beside the audio as `voice.speech.txt` for review.
+
+```bash
+python -m voice2reel.production_voice \
+  --plan /path/to/scene.json --output /path/to/voice.mp3 \
+  --language ar --voice ar-JO-TaimNeural --rate=+0% \
+  --diacritics technical
+```
+
+For an incorrectly pronounced expression, add `VOICE_TERMS` in Colab.
+For more conversational Arabic, rewrite that shot's speech using
+`VOICE_OVERRIDES`. They never rewrite the visual plan or captions.
+Use `ARABIC_TASHKEEL = "off"` if a particular neural voice speaks more
+naturally without the added vowel marks.
+
+Edge TTS remains a pretrained third-party speech engine; **these changes do
+not train or fine-tune its Arabic model**. Overall quality and accent will
+vary by voice and cannot be guaranteed without listening.
