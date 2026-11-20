@@ -5,6 +5,7 @@ on:
     branches: [test-new-data]
     paths:
       - 'voice2reel/production_voice.py'
+      - 'voice2reel/arabic_speech.py'
       - 'tests/test_production_voice.py'
       - '.github/workflows/arabic-voice.yml'
   workflow_dispatch:
